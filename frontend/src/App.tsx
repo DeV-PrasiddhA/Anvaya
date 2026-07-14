@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
+import SignUp from './components/SignUp'
 
 function App() {
+  const [currentPage, setCurrentPage] = useState<'landing' | 'signup'>('landing');
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     { sender: 'ai', text: 'Namaste! I am the Anvaya Agricultural Assistant. I can forecast weather trends, monitor soil analytics, or estimate floor prices. Select a topic below to test:' }
   ]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -50,6 +56,10 @@ function App() {
   // Duplicate items for seamless continuous loop
   const tickerList = [...cropTickerItems, ...cropTickerItems];
 
+  if (currentPage === 'signup') {
+    return <SignUp onNavigateBack={() => setCurrentPage('landing')} />;
+  }
+
   return (
     <div className="bg-background text-on-surface font-body-sm min-h-screen overflow-x-hidden selection:bg-secondary-container selection:text-on-secondary-container">
       {/* Top Navigation */}
@@ -63,7 +73,10 @@ function App() {
           <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200" href="#how-it-works">How it Works</a>
           <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200" href="#testimonials">Testimonials</a>
         </nav>
-        <button className="bg-primary text-on-primary px-5 py-2.5 rounded-xl font-label-caps text-label-caps hover:bg-primary-container transition-all hover:scale-105 active:scale-95 shadow-sm">
+        <button 
+          onClick={() => setCurrentPage('signup')}
+          className="bg-primary text-on-primary px-5 py-2.5 rounded-xl font-label-caps text-label-caps hover:bg-primary-container transition-all hover:scale-105 active:scale-95 shadow-sm cursor-pointer"
+        >
           Get Started
         </button>
       </header>
@@ -100,7 +113,10 @@ function App() {
               Anvaya is a state-of-the-art agricultural ecosystem that unites rural Nepalese growers with major commercial buyers. Leveraging real-time AI forecasts, direct-to-retail logistics, and transparent pricing, we eliminate middlemen to deliver fresher produce and higher margins.
             </p>
             <div className="flex flex-wrap gap-4 mt-2">
-              <button className="bg-secondary text-on-secondary px-7 py-3.5 rounded-xl font-label-caps text-label-caps shadow-md hover:bg-on-secondary-container hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
+              <button 
+                onClick={() => setCurrentPage('signup')}
+                className="bg-secondary text-on-secondary px-7 py-3.5 rounded-xl font-label-caps text-label-caps shadow-md hover:bg-on-secondary-container hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
+              >
                 Join the Future of Agriculture
               </button>
               <button className="bg-surface-container-high text-on-surface px-7 py-3.5 rounded-xl font-label-caps text-label-caps border border-outline-variant hover:bg-surface-container-highest hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">
@@ -322,7 +338,11 @@ function App() {
           <p className="font-body-lg text-body-lg text-on-primary/80 max-w-2xl fade-in-up visible block whitespace-normal" style={{ transitionDelay: '0.1s' }}>
             Join thousands of modern Nepalese growers and commercial distributors on the smart agricultural exchange network.
           </p>
-          <button className="mt-2 bg-secondary-fixed text-on-secondary-fixed px-8 py-4 rounded-xl font-label-caps text-label-caps shadow-lg hover:bg-secondary-container hover:scale-105 active:scale-95 transition-all duration-200 fade-in-up visible" style={{ transitionDelay: '0.2s' }}>
+          <button 
+            onClick={() => setCurrentPage('signup')}
+            className="mt-2 bg-secondary-fixed text-on-secondary-fixed px-8 py-4 rounded-xl font-label-caps text-label-caps shadow-lg hover:bg-secondary-container hover:scale-105 active:scale-95 transition-all duration-200 fade-in-up visible cursor-pointer" 
+            style={{ transitionDelay: '0.2s' }}
+          >
             Get Started For Free
           </button>
         </section>
