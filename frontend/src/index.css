@@ -50,16 +50,6 @@
   --color-on-primary-fixed-variant: #264e3c;
   --color-surface-variant: #dae2fd;
 
-  /* Custom Spacings for Page Margins */
-  --spacing-margin-desktop: 48px;
-  --spacing-margin-mobile: 16px;
-  --spacing-gutter: 16px;
-  --spacing-lg: 24px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-xl: 32px;
-  --spacing-base: 4px;
-  --spacing-xs: 4px;
 
   /* Font Families */
   --font-body-sm: "Inter", sans-serif;

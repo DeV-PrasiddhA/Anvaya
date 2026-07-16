@@ -106,7 +106,7 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
       </div>
 
       {/* Main Content Canvas */}
-      <main className="flex-grow z-10 flex flex-col items-center justify-center p-margin-mobile md:p-margin-desktop w-full max-w-7xl mx-auto min-h-screen">
+      <main className="flex-grow z-10 flex flex-col items-center justify-center p-4 md:p-12 w-full max-w-7xl mx-auto min-h-screen">
         {/* Brand Header */}
         <div className="absolute top-6 left-6 md:left-12 z-20">
           <button
@@ -121,8 +121,8 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
         {phase === 'select-role' && (
           <div className="flex flex-col items-center justify-center w-full py-12">
             {/* Header Section */}
-            <div className="text-center mb-xl w-full max-w-3xl animate-fade-in">
-              <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-sm font-bold tracking-tight">
+            <div className="text-center mb-8 w-full max-w-3xl animate-fade-in">
+              <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-2 font-bold tracking-tight">
                 Choose your role
               </h1>
               <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto">
@@ -131,26 +131,26 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
             </div>
 
             {/* Role Selection Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter md:gap-lg w-full max-w-4xl px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full max-w-4xl px-4">
               {roles.map((role) => (
                 <button
                   key={role.id}
                   onClick={() => handleRoleClick(role.id)}
-                  className="role-card glass-panel rounded-xl p-lg flex flex-col items-start text-left cursor-pointer border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] bg-surface/80 group focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 w-full"
+                  className="role-card glass-panel rounded-xl p-6 flex flex-col items-start text-left cursor-pointer border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] bg-surface/80 group focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 w-full"
                 >
-                  <div className="icon-container w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-md text-primary">
+                  <div className="icon-container w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 text-primary">
                     <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                       {role.icon}
                     </span>
                   </div>
-                  <h2 className="font-headline-md text-headline-md text-primary mb-xs font-semibold">{role.title}</h2>
+                  <h2 className="font-headline-md text-headline-md text-primary mb-1 font-semibold">{role.title}</h2>
                   <p className="font-body-sm text-body-sm text-on-surface-variant flex-grow">{role.description}</p>
                 </button>
               ))}
             </div>
 
             {/* Return to Login */}
-            <div className="mt-xl text-center">
+            <div className="mt-8 text-center">
               <button
                 onClick={onNavigateBack}
                 className="font-body-sm text-body-sm text-primary hover:text-secondary transition-colors underline decoration-primary/30 hover:decoration-secondary focus:outline-none cursor-pointer border-none bg-transparent"
