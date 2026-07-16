@@ -50,10 +50,6 @@
   --color-on-primary-fixed-variant: #264e3c;
   --color-surface-variant: #dae2fd;
 
-  /* Custom Spacings for Page Margins */
-  --spacing-margin-desktop: 48px;
-  --spacing-margin-mobile: 16px;
-  --spacing-gutter: 16px;
 
   /* Font Families */
   --font-body-sm: "Inter", sans-serif;
@@ -144,4 +140,24 @@
 
 .glow-pulse {
   animation: pulse-glow 2s infinite;
+}
+
+@utility role-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px -8px rgba(0, 45, 28, 0.15);
+    border-color: rgba(0, 109, 62, 0.2);
+  }
+}
+
+.role-card:hover .icon-container {
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-fixed);
+  transform: scale(1.05);
+}
+
+.icon-container {
+  transition: all 0.3s ease;
 }
