@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import SignUp from './components/SignUp'
+import FarmerDashboard from './components/FarmerDashboard'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'signup'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'signup' | 'farmer-dashboard'>('landing');
+  const [farmerName, setFarmerName] = useState('Farmer');
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     { sender: 'ai', text: 'Namaste! I am the Anvaya Agricultural Assistant. I can forecast weather trends, monitor soil analytics, or estimate floor prices. Select a topic below to test:' }
@@ -56,8 +58,15 @@ function App() {
   // Duplicate items for seamless continuous loop
   const tickerList = [...cropTickerItems, ...cropTickerItems];
 
+  if (currentPage === 'farmer-dashboard') {
+    return <FarmerDashboard farmerName={farmerName} onNavigateBack={() => setCurrentPage('landing')} />;
+  }
+
   if (currentPage === 'signup') {
-    return <SignUp onNavigateBack={() => setCurrentPage('landing')} />;
+    return <SignUp
+      onNavigateBack={() => setCurrentPage('landing')}
+      onNavigateToDashboard={(name) => { setFarmerName(name || 'Farmer'); setCurrentPage('farmer-dashboard'); }}
+    />;
   }
 
   return (

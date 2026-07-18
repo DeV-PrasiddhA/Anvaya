@@ -54,12 +54,12 @@
   --spacing-margin-desktop: 48px;
   --spacing-margin-mobile: 16px;
   --spacing-gutter: 16px;
-  --spacing-lg: 24px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-xl: 32px;
+  --spacing-sp-lg: 24px;
+  --spacing-sp-sm: 8px;
+  --spacing-sp-md: 16px;
+  --spacing-sp-xl: 32px;
   --spacing-base: 4px;
-  --spacing-xs: 4px;
+  --spacing-sp-xs: 4px;
 
   /* Font Families */
   --font-body-sm: "Inter", sans-serif;
