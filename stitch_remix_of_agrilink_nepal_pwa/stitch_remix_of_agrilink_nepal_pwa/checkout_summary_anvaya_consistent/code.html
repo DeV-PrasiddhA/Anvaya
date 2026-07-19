@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Checkout - AgriLink Nepal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-error": "#ffffff",
+                "surface-dim": "#d2d9f4",
+                "on-tertiary": "#ffffff",
+                "error": "#ba1a1a",
+                "on-tertiary-container": "#a5a6a2",
+                "surface-container-highest": "#dae2fd",
+                "primary-fixed": "#c0edd3",
+                "on-secondary-fixed": "#00210f",
+                "secondary-fixed-dim": "#73db9a",
+                "secondary-container": "#8cf5b2",
+                "surface-tint": "#3e6752",
+                "secondary-fixed": "#8ff8b4",
+                "on-secondary-fixed-variant": "#00522d",
+                "surface-container-low": "#f2f3ff",
+                "secondary": "#006d3e",
+                "on-surface": "#131b2e",
+                "on-tertiary-fixed-variant": "#454744",
+                "inverse-on-surface": "#eef0ff",
+                "on-surface-variant": "#414944",
+                "primary": "#002d1c",
+                "on-primary-container": "#85b098",
+                "outline": "#717973",
+                "tertiary-fixed": "#e3e3de",
+                "on-primary": "#ffffff",
+                "error-container": "#ffdad6",
+                "inverse-primary": "#a4d0b8",
+                "on-secondary-container": "#007241",
+                "primary-fixed-dim": "#a4d0b8",
+                "surface-bright": "#faf8ff",
+                "on-error-container": "#93000a",
+                "surface-container-high": "#e2e7ff",
+                "surface-container": "#eaedff",
+                "outline-variant": "#c1c8c2",
+                "tertiary-container": "#3a3c39",
+                "tertiary": "#242623",
+                "tertiary-fixed-dim": "#c6c7c2",
+                "inverse-surface": "#283044",
+                "surface": "#faf8ff",
+                "on-primary-fixed-variant": "#264e3c",
+                "on-secondary": "#ffffff",
+                "on-primary-fixed": "#002114",
+                "surface-variant": "#dae2fd",
+                "surface-container-lowest": "#ffffff",
+                "primary-container": "#1a4331",
+                "background": "#faf8ff",
+                "on-tertiary-fixed": "#1a1c19",
+                "on-background": "#131b2e"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "base": "4px",
+                "xl": "32px",
+                "xs": "4px",
+                "margin-mobile": "16px",
+                "sm": "8px",
+                "md": "16px",
+                "margin-desktop": "48px",
+                "gutter": "16px",
+                "lg": "24px"
+        },
+        "fontFamily": {
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "body-sm": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ],
+                "label-caps": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ],
+                "headline-md": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-sm": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "20px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .ambient-shadow {
+            box-shadow: 0 8px 32px -8px rgba(26, 67, 49, 0.08);
+        }
+        body {
+            background-color: #faf8ff;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(149,34%,88%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(232,54%,91%,1) 0, transparent 50%);
+            background-attachment: fixed;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-lg text-on-surface antialiased">
+<!-- Top Navigation Bar (Mobile Focused) -->
+<nav class="fixed top-0 w-full z-50 bg-white/40 backdrop-blur-xl border-b border-white/50 shadow-sm flex justify-between items-center h-16 px-4">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform" onclick="window.history.back()">
+<span class="material-symbols-outlined text-primary-container">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary-container">Checkout</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant">account_circle</span>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="pt-20 pb-32 px-4 max-w-lg mx-auto">
+<!-- Order Summary Section -->
+<section class="mb-8">
+<h2 class="font-label-caps text-label-caps uppercase tracking-wider text-outline mb-4 ml-1">Order Details</h2>
+<div class="glass-panel rounded-xl p-4 flex gap-4 ambient-shadow">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A high-end editorial food photograph of vibrant red Mustang Apples in a rustic wooden crate. The lighting is soft and natural, emphasizing the waxy texture of the fruit against a minimalist slate gray background. The overall aesthetic is clean, professional, and premium, following the Indigo and Slate design narrative." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZQzj5NVkprHZR5yCe0446YaMWQrEYfmp09pICKYWtVn4v2m7WLUGHn60-smBJhzBV5z2KOx-J0GuVpP0e8nmxYBK4B52zd0bHZMYw5PPVC1WXnJdc-640sS7f5cLZ2mXlrVEDZCePsnA-RKS6Qi5z6lPm9_icD3UrytdBFpYyicgxfhysMihj_2-AzTOgi0Wy1rXdfXiilf5o0Ri9dps3iUTjzqpONEkT6S6AebMi_tLzEy3oU_y-"/>
+</div>
+<div class="flex flex-col justify-between py-1">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Mustang Apples</h3>
+<p class="font-body-sm text-on-surface-variant">Premium Grade • 10kg</p>
+</div>
+<div class="font-headline-md text-headline-md text-primary-container">
+                        NPR 3,200
+                    </div>
+</div>
+</div>
+</section>
+<!-- Delivery Address Section -->
+<section class="mb-8">
+<div class="flex justify-between items-center mb-4 ml-1">
+<h2 class="font-label-caps text-label-caps uppercase tracking-wider text-outline">Delivery Address</h2>
+<button class="text-primary-container font-label-caps hover:underline">Change</button>
+</div>
+<div class="glass-panel rounded-xl p-4 ambient-shadow flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-1">location_on</span>
+<div>
+<p class="font-headline-md text-headline-md text-on-surface">Home</p>
+<p class="font-body-sm text-on-surface-variant">Lazimpat Road, Kathmandu 44600<br/>House No. 42B, Near Embassy of Israel</p>
+<p class="font-body-sm text-on-surface-variant mt-2">+977 9801234567</p>
+</div>
+</div>
+</section>
+<!-- Payment Method Section -->
+<section class="mb-8">
+<h2 class="font-label-caps text-label-caps uppercase tracking-wider text-outline mb-4 ml-1">Payment Method</h2>
+<div class="space-y-3">
+<!-- eSewa Selected -->
+<div class="relative bg-white/80 backdrop-blur-md border-[1.5px] border-secondary-container rounded-xl p-4 flex items-center justify-between overflow-hidden shadow-sm">
+<div class="absolute left-0 top-0 h-full w-1.5 bg-secondary-container"></div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-2 border border-outline-variant/30">
+<img class="w-full h-auto" data-alt="The official eSewa logo, a vibrant green leaf-shaped icon with white typography, centered on a clean white background. The logo represents Nepal's premier digital wallet, maintaining its iconic green brand identity within a minimalist and modern digital interface context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlUCnv_KkbNPduV8xWtR_g0mxeYwK0uSfFSPcP33fucklGyNtoQVovwQjEp9pjdtRyU5GscWFK463lSE-6XpH6hT9F7R6bBdLzlFx9PNJUHwJAAjfih-4QqZUS-P8hFOJ8gMrAhaAliGCJUq-_-90JKsLpc7Blg5WHVSnLvM5baacyQdOMLLhENPsp3dW1BJn4bEt3wI0vfxqyCQtY1Q_5abVhGBC35igCKa1kprCFsqORdBhHBoa4"/>
+</div>
+<div>
+<p class="font-headline-md text-headline-md text-on-surface">eSewa Wallet</p>
+<p class="font-label-caps text-primary-container font-semibold">Selected</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- Other Options (Ghost style) -->
+<div class="glass-panel rounded-xl p-4 flex items-center justify-between opacity-50 grayscale">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">account_balance</span>
+</div>
+<p class="font-headline-md text-headline-md text-on-surface-variant">Mobile Banking</p>
+</div>
+<div class="w-6 h-6 rounded-full border-[1.5px] border-outline-variant"></div>
+</div>
+<div class="glass-panel rounded-xl p-4 flex items-center justify-between opacity-50 grayscale">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">payments</span>
+</div>
+<p class="font-headline-md text-headline-md text-on-surface-variant">Cash on Delivery</p>
+</div>
+<div class="w-6 h-6 rounded-full border-[1.5px] border-outline-variant"></div>
+</div>
+<div class="glass-panel rounded-xl p-4 flex items-center justify-between opacity-50 grayscale">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center font-bold text-outline text-lg">
+K
+</div>
+<p class="font-headline-md text-headline-md text-on-surface-variant">Khalti</p>
+</div>
+<div class="w-6 h-6 rounded-full border-[1.5px] border-outline-variant"></div>
+</div>
+</div>
+</section>
+<!-- Bill Breakdown -->
+<section class="glass-panel rounded-xl p-6 mb-8">
+<div class="space-y-3">
+<div class="flex justify-between text-on-surface-variant">
+<span class="font-body-sm">Subtotal (10kg)</span>
+<span class="font-body-sm">NPR 3,200.00</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span class="font-body-sm">Delivery Fee</span>
+<span class="font-body-sm">NPR 150.00</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span class="font-body-sm">Platform Fee</span>
+<span class="font-body-sm">NPR 15.00</span>
+</div>
+<div class="h-px bg-outline-variant/30 my-3"></div>
+<div class="flex justify-between items-center">
+<span class="font-headline-md text-on-surface">Total Amount</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary-container">NPR 3,365.00</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Action Bar -->
+<div class="fixed bottom-0 left-0 w-full p-4 pb-safe border-t border-white/50 glass-card">
+<button class="w-full bg-primary-container text-on-primary font-headline-md py-4 rounded-xl flex items-center justify-center gap-3 shadow-[0_8px_16px_rgba(26,67,49,0.2)] active:scale-95 transition-all duration-200">
+<span class="material-symbols-outlined">verified_user</span>
+            Pay with eSewa
+        </button>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        // Simple scale effect for list items on click
+        document.querySelectorAll('.rounded-xl').forEach(card => {
+            card.addEventListener('touchstart', () => {
+                card.style.transform = 'scale(0.98)';
+                card.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+            card.addEventListener('touchend', () => {
+                card.style.transform = 'scale(1)';
+            });
+        });
+
+        // Toggle Payment Method logic (Visual only)
+        const paymentCards = document.querySelectorAll('.space-y-3 > div');
+        paymentCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // In this specific design, eSewa is forced active and others inactive
+                // But keeping logic for potential future use if needed, though visually suppressed
+            });
+        });
+    </script>
+</body></html>

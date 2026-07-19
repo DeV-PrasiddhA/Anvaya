@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgriLink Nepal - Logistics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#faf8ff",
+                        "tertiary-fixed-dim": "#c6c7c2",
+                        "inverse-on-surface": "#eef0ff",
+                        "surface": "#faf8ff",
+                        "on-tertiary-container": "#a5a6a2",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#8ff8b4",
+                        "secondary-container": "#8cf5b2",
+                        "outline": "#717973",
+                        "inverse-primary": "#a4d0b8",
+                        "on-secondary-fixed-variant": "#00522d",
+                        "secondary-fixed-dim": "#73db9a",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#dae2fd",
+                        "surface-container": "#eaedff",
+                        "on-tertiary-fixed-variant": "#454744",
+                        "surface-dim": "#d2d9f4",
+                        "on-background": "#131b2e",
+                        "on-secondary-fixed": "#00210f",
+                        "primary-fixed": "#c0edd3",
+                        "inverse-surface": "#283044",
+                        "error": "#ba1a1a",
+                        "primary-container": "#1a4331",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#242623",
+                        "on-tertiary-fixed": "#1a1c19",
+                        "on-surface-variant": "#414944",
+                        "on-primary-fixed-variant": "#264e3c",
+                        "on-secondary-container": "#007241",
+                        "primary": "#002d1c",
+                        "surface-container-high": "#e2e7ff",
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#dae2fd",
+                        "on-primary-fixed": "#002114",
+                        "tertiary-fixed": "#e3e3de",
+                        "outline-variant": "#c1c8c2",
+                        "secondary": "#006d3e",
+                        "on-primary-container": "#85b098",
+                        "tertiary-container": "#3a3c39",
+                        "on-surface": "#131b2e",
+                        "surface-tint": "#3e6752",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#faf8ff",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#a4d0b8",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f2f3ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "lg": "24px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>.glass-panel {
+    background: rgba(250, 248, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1)
+    }
+.map-bg {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDcgSWuK9FUsjUinM2RRhKu3stFnk8UiUsAa1uDtYZ8dSNMsmRP1PzGJdT4ZQbZwvO6_XvSIv6OXZR5LizcDc9h5jD6t-cdtRU97k4V0WnenJwsYfyMeV3W7jFd6nMvsm4jPhmcGCfXiJzpLDyPSAsLOM7sUUdEK1ZOgQuT_tb7_UU6s0srjxutXCw50zEXEFumZse5NEyETMSt7orY4nWKQtYhxJJ438078JX-vKB8pMt_KSfIbTlo);
+    background-size: cover;
+    background-position: center
+    }
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px
+    }
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent
+    }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(65, 73, 68, 0.2);
+    border-radius: 10px
+    }</style>
+</head>
+<body class="bg-background text-on-surface font-body-lg h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-64 hidden md:flex flex-col bg-primary dark:bg-on-background text-on-primary dark:text-primary-fixed border-r border-white/5 shadow-xl transition-all duration-300 ease-in-out py-6 gap-sm z-40">
+<div class="px-6 mb-8">
+<h1 class="font-headline-md text-headline-md text-secondary-fixed">Anvaya</h1>
+<p class="font-body-sm text-body-sm text-on-primary/70 mt-1">Premium Agricultural Hub</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="{{DATA:SCREEN:SCREEN_141}}">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="{{DATA:SCREEN:SCREEN_10}}">
+<span class="material-symbols-outlined">storefront</span>
+                Marketplace
+            </a>
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="{{DATA:SCREEN:SCREEN_9}}">
+<span class="material-symbols-outlined">monitoring</span>
+                Intelligence
+            </a>
+<a class="flex items-center gap-4 bg-secondary-container text-on-secondary-container rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="{{DATA:SCREEN:SCREEN_6}}">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+                Logistics
+            </a>
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="#">
+<span class="material-symbols-outlined">groups</span>
+                Community
+            </a>
+</nav>
+<div class="mt-auto px-6 pt-6 border-t border-white/10 space-y-2">
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary transition-colors py-2" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary transition-colors py-2" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+<button class="mt-6 w-full py-3 bg-secondary text-on-secondary rounded-lg font-label-caps text-label-caps hover:bg-secondary/90 transition-colors shadow-sm">
+                Upgrade Plan
+            </button>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-64 relative w-full h-full">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full md:w-[calc(100%-256px)] z-50 bg-surface/80 backdrop-blur-xl dark:bg-on-background/80 border-b border-white/10 dark:border-primary/10 shadow-sm transition-all">
+<div class="flex justify-between items-center h-16 px-margin-mobile md:px-margin-desktop w-full">
+<div class="flex items-center md:hidden">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Anvaya</span>
+</div>
+<!-- Desktop Search Placeholder -->
+<div class="hidden md:flex flex-1 max-w-md ml-4">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container rounded-full border-none focus:ring-2 focus:ring-primary text-sm font-body-sm" placeholder="Search locations, cooperatives..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4 ml-auto">
+<button class="text-on-surface-variant hover:bg-surface-container-high/50 p-2 rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high/50 p-2 rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Interactive Map Canvas -->
+<main class="flex-1 relative w-full h-full pt-16">
+<!-- Map Background -->
+<div class="absolute inset-0 w-full h-full map-bg" data-alt="A highly detailed, modern topographical map view of the Mustang region in Nepal, stylized with minimal UI mapping elements. The terrain is rendered in soft, light-mode hues of pale greens, sand, and subtle topographic lines. A sophisticated, glassmorphic UI overlay aesthetic is implied through clean spatial organization. The map feels premium, data-rich, and optimized for an agricultural logistics dashboard, avoiding cluttered traditional map styles in favor of a sleek, abstract data-visualization approach." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBQiEFsAZhzCpetxUSqsBKKcbP2-i67Cw5oZUumEimkawVTqy-IrdiTSVGNoKQMiGCHdahssjNXjhP9JcD8hYqUeWMDksIqMYeQvu5aZaRfMMISnhfS_xA87Wj27dHT5GXYeKNKO1oeNbvuotgfVuP7v0AcDc_wW14xuBjGYwCPL1bX0T-UT2b79q3t8Ea66afYOIHFis4Vbs_x2zQw683BpoCZDmVGdLsbUrxl8J-dYSTbWO4E5Nb5')">
+<!-- Map Overlay Gradient for readability -->
+<div class="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent"></div>
+</div>
+<!-- Map Pins (Interactive Elements) -->
+<!-- Pin 1: Mustang Cooperative (Active/Clicked state) -->
+<div class="absolute top-[35%] left-[45%] transform -translate-x-1/2 -translate-y-1/2 z-20 cursor-pointer group hover:z-30">
+<div class="relative">
+<!-- Pulsing ring for active state -->
+<div class="absolute -inset-2 bg-secondary rounded-full opacity-20 animate-ping"></div>
+<div class="glass-panel p-2 rounded-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.08)] flex items-center gap-3 border-2 border-secondary hover:scale-105 transition-transform duration-200">
+<div class="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined">agriculture</span>
+</div>
+<div class="pr-2">
+<p class="font-body-sm text-body-sm font-bold text-primary">Mustang Coop</p>
+<div class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-caps text-label-caps text-outline">Ready</span>
+</div>
+</div>
+</div>
+<!-- Connection line to a subtle point -->
+<div class="absolute top-full left-1/2 w-0.5 h-6 bg-secondary -translate-x-1/2"></div>
+<div class="absolute top-[calc(100%+24px)] left-1/2 w-2 h-2 rounded-full bg-secondary border-2 border-white -translate-x-1/2 shadow-sm"></div>
+</div>
+</div>
+<!-- Pin 2: Other Farm -->
+<div class="absolute top-[55%] left-[25%] transform -translate-x-1/2 -translate-y-1/2 z-10 cursor-pointer opacity-80 hover:opacity-100 transition-opacity hover:z-30">
+<div class="relative">
+<div class="glass-panel p-2 rounded-xl shadow-sm flex items-center gap-3 border border-white/20 hover:scale-105 transition-transform duration-200">
+<div class="w-8 h-8 bg-surface-container rounded-lg flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">local_florist</span>
+</div>
+<div class="pr-2 hidden sm:block">
+<p class="font-body-sm text-body-sm font-bold text-primary">Gurung Farm</p>
+<div class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-label-caps text-label-caps text-outline">Pending</span>
+</div>
+</div>
+</div>
+<!-- Connection line -->
+<div class="absolute top-full left-1/2 w-0.5 h-4 bg-outline/50 -translate-x-1/2"></div>
+<div class="absolute top-[calc(100%+16px)] left-1/2 w-1.5 h-1.5 rounded-full bg-outline border border-white -translate-x-1/2"></div>
+</div>
+</div>
+<!-- Logistics Side Panel (Drawer) -->
+<aside class="absolute top-0 right-0 h-full w-full sm:w-[400px] glass-panel border-l border-white/20 shadow-[-8px_0_32px_0_rgba(0,0,0,0.05)] z-30 transform translate-x-0 transition-transform duration-300 flex flex-col p-6 overflow-y-auto custom-scrollbar pt-6">
+<!-- Drawer Header -->
+<div class="flex justify-between items-start mb-6">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Mustang Agriculture Cooperative</h2>
+<span class="material-symbols-outlined text-secondary text-xl" title="Verified">verified</span>
+</div>
+<p class="font-body-sm text-body-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                            Jomsom Region, Mustang
+                        </p>
+</div>
+<button class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Metrics Grid -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-surface/60 rounded-xl p-4 border border-white/30 shadow-sm">
+<span class="font-label-caps text-label-caps text-outline block mb-1">Total Harvest Volume</span>
+<p class="font-headline-lg text-headline-lg text-primary">5,000 <span class="text-sm text-outline font-normal">KG</span></p>
+</div>
+<div class="bg-surface/60 rounded-xl p-4 border border-white/30 shadow-sm">
+<span class="font-label-caps text-label-caps text-outline block mb-1">Active Farmers</span>
+<p class="font-headline-lg text-headline-lg text-primary">12</p>
+</div>
+</div>
+<!-- Primary Crops -->
+<div class="mb-6">
+<h3 class="font-body-sm text-body-sm font-bold text-primary mb-3">Primary Crops</h3>
+<div class="flex gap-2 flex-wrap">
+<span class="bg-secondary-container/30 text-on-secondary-container px-3 py-1.5 rounded-full font-body-sm text-body-sm flex items-center gap-1 border border-secondary-container">
+<span class="material-symbols-outlined text-sm">nutrition</span> Apples
+                        </span>
+<span class="bg-surface-container text-on-surface-variant px-3 py-1.5 rounded-full font-body-sm text-body-sm flex items-center gap-1 border border-white/40">
+<span class="material-symbols-outlined text-sm">eco</span> Walnuts
+                        </span>
+</div>
+</div>
+<!-- Fleet Status -->
+<div class="mb-8">
+<h3 class="font-body-sm text-body-sm font-bold text-primary mb-3">Dispatch Status</h3>
+<div class="bg-surface-container-low rounded-xl p-4 border border-white/50">
+<div class="flex items-center justify-between mb-2">
+<span class="font-body-sm text-body-sm font-bold text-primary">Truck NPL-4502</span>
+<span class="bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs font-bold">En Route</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-1.5 mb-2">
+<div class="bg-secondary h-1.5 rounded-full" style="width: 70%"></div>
+</div>
+<p class="font-label-caps text-label-caps text-outline text-right">ETA: 2 Hours</p>
+</div>
+</div>
+<!-- Spacer -->
+<div class="flex-grow"></div>
+<!-- Chart/Trends -->
+<div class="mb-6 bg-surface/50 rounded-xl p-4 border border-white/20">
+<h3 class="font-body-sm text-body-sm font-bold text-primary mb-2">Regional Price Trend (Apple)</h3>
+<!-- Decorative Chart Line -->
+<div class="h-16 w-full relative overflow-hidden rounded-lg">
+<svg class="w-full h-full preserve-aspect-ratio-none stroke-secondary fill-secondary/10" viewbox="0 0 100 30">
+<path class="fill-secondary/20 stroke-none" d="M0,30 L0,25 Q10,20 20,22 T40,15 T60,18 T80,5 T100,2 L100,30 Z"></path>
+<path class="stroke-secondary" d="M0,25 Q10,20 20,22 T40,15 T60,18 T80,5 T100,2" fill="none" stroke-width="2"></path>
+<!-- Floating Data point -->
+<circle class="fill-white stroke-secondary" cx="80" cy="5" r="2" stroke-width="1"></circle>
+</svg>
+<div class="absolute top-0 right-[15%] bg-surface border border-outline/20 shadow-sm px-2 py-1 rounded text-xs font-bold text-primary">
+                            NPR 120/kg
+                        </div>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-primary text-on-primary py-3 px-4 rounded-xl font-body-lg text-body-lg font-bold shadow-md hover:bg-primary/90 transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined">inventory_2</span>
+                    View Inventory
+                </button>
+</aside>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 w-full md:hidden rounded-t-xl z-50 pb-safe bg-surface/80 backdrop-blur-xl dark:bg-on-background/90 border-t border-white/10 dark:border-primary/10 shadow-[0_-8px_32px_0_rgba(0,0,0,0.08)]">
+<div class="flex justify-around items-center h-20 px-4 w-full">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline active:bg-surface-container-highest scale-110 transition-transform duration-200" href="{{DATA:SCREEN:SCREEN_141}}">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline active:bg-surface-container-highest scale-110 transition-transform duration-200" href="{{DATA:SCREEN:SCREEN_10}}">
+<span class="material-symbols-outlined mb-1">shopping_bag</span>
+<span class="font-label-caps text-label-caps">Market</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline active:bg-surface-container-highest scale-110 transition-transform duration-200" href="{{DATA:SCREEN:SCREEN_9}}">
+<span class="material-symbols-outlined mb-1">smart_toy</span>
+<span class="font-label-caps text-label-caps">AI Advisor</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed font-bold bg-secondary-container/20 rounded-full px-4 py-1 active:bg-surface-container-highest scale-110 transition-transform duration-200" href="{{DATA:SCREEN:SCREEN_6}}">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">package_2</span>
+<span class="font-label-caps text-label-caps">Logistics</span>
+</a>
+</div>
+</nav>
+</body></html>

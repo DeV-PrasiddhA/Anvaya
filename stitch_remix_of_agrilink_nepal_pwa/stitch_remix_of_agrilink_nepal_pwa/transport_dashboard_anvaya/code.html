@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>Anvaya - Transport Provider Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error-container": "#93000a",
+                      "surface-variant": "#dae2fd",
+                      "surface-container-high": "#e2e7ff",
+                      "on-tertiary-container": "#a5a6a2",
+                      "secondary": "#006d3e",
+                      "on-primary-container": "#85b098",
+                      "on-background": "#131b2e",
+                      "inverse-primary": "#a4d0b8",
+                      "on-surface": "#131b2e",
+                      "primary-fixed": "#c0edd3",
+                      "background": "#faf8ff",
+                      "primary-container": "#1a4331",
+                      "on-secondary": "#ffffff",
+                      "surface-container-highest": "#dae2fd",
+                      "primary": "#002d1c",
+                      "on-secondary-fixed": "#00210f",
+                      "on-primary-fixed-variant": "#264e3c",
+                      "surface-container": "#eaedff",
+                      "error-container": "#ffdad6",
+                      "outline-variant": "#c1c8c2",
+                      "inverse-surface": "#283044",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed-variant": "#454744",
+                      "secondary-container": "#8cf5b2",
+                      "on-tertiary-fixed": "#1a1c19",
+                      "on-tertiary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "tertiary": "#242623",
+                      "surface-tint": "#3e6752",
+                      "tertiary-fixed": "#e3e3de",
+                      "on-surface-variant": "#414944",
+                      "on-primary": "#ffffff",
+                      "primary-fixed-dim": "#a4d0b8",
+                      "inverse-on-surface": "#eef0ff",
+                      "surface-dim": "#d2d9f4",
+                      "on-primary-fixed": "#002114",
+                      "surface-bright": "#faf8ff",
+                      "secondary-fixed-dim": "#73db9a",
+                      "on-secondary-container": "#007241",
+                      "surface-container-low": "#f2f3ff",
+                      "surface": "#faf8ff",
+                      "on-secondary-fixed-variant": "#00522d",
+                      "outline": "#717973",
+                      "tertiary-container": "#3a3c39",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#c6c7c2",
+                      "secondary-fixed": "#8ff8b4"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "48px",
+                      "xl": "32px",
+                      "md": "16px",
+                      "margin-mobile": "16px",
+                      "base": "4px",
+                      "gutter": "16px",
+                      "xs": "4px",
+                      "sm": "8px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "label-caps": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "headline-lg-mobile": ["Inter"]
+              },
+              "fontSize": {
+                      "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .dark .glass-panel {
+            background: rgba(19, 27, 46, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glass-inset {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen font-body-lg flex">
+<!-- SideNav (Desktop) -->
+<nav class="fixed left-0 top-0 h-full w-64 hidden md:flex flex-col bg-primary dark:bg-on-background border-r border-white/5 shadow-xl transition-all duration-300 ease-in-out py-6 gap-sm z-50">
+<div class="px-lg pb-6 border-b border-white/10 mb-2">
+<h1 class="font-headline-md text-headline-md text-secondary-fixed">AgriLink Nepal</h1>
+<p class="font-body-sm text-body-sm text-on-primary/70 mt-1">Premium Agricultural Hub</p>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-1">
+<a class="bg-secondary-container text-on-secondary-container rounded-xl mx-2 my-1 flex items-center px-4 py-3 gap-3 font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                Dashboard
+            </a>
+<a class="text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl mx-2 my-1 flex items-center px-4 py-3 gap-3 transition-colors font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined">storefront</span>
+                Marketplace
+            </a>
+<a class="text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl mx-2 my-1 flex items-center px-4 py-3 gap-3 transition-colors font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+                Intelligence
+            </a>
+<a class="text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl mx-2 my-1 flex items-center px-4 py-3 gap-3 transition-colors font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+                Logistics
+            </a>
+<a class="text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl mx-2 my-1 flex items-center px-4 py-3 gap-3 transition-colors font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined">groups</span>
+                Community
+            </a>
+</div>
+<div class="mt-auto pt-4 border-t border-white/10 flex flex-col gap-1">
+<a class="text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl mx-2 my-1 flex items-center px-4 py-3 gap-3 transition-colors font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+<a class="text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl mx-2 my-1 flex items-center px-4 py-3 gap-3 transition-colors font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+<div class="mx-4 mt-4">
+<button class="w-full bg-secondary-fixed text-on-secondary-fixed rounded-lg py-2 font-body-sm text-body-sm hover:bg-secondary-fixed/90 transition-colors">Upgrade Plan</button>
+</div>
+</div>
+</nav>
+<!-- TopNavBar (Mobile) -->
+<header class="fixed top-0 w-full z-50 md:hidden bg-surface/80 backdrop-blur-xl dark:bg-on-background/80 shadow-sm border-b border-white/10 dark:border-primary/10 flex justify-between items-center h-16 px-margin-mobile">
+<div class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">AgriLink Nepal</div>
+<div class="flex gap-4 items-center">
+<button class="text-on-surface-variant dark:text-outline hover:bg-surface-container-high/50 p-2 rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant dark:text-outline hover:bg-surface-container-high/50 p-2 rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full md:ml-64 pt-20 md:pt-8 pb-24 md:pb-8 px-margin-mobile md:px-margin-desktop min-h-screen max-w-7xl mx-auto">
+<header class="mb-lg flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-background">Logistics Overview</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Manage fleet status and active routes.</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-body-sm text-body-sm text-secondary font-semibold">Fleet Active</span>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Fleet Status (Truck NPL-4502) -->
+<section class="md:col-span-8 glass-panel rounded-xl p-6 relative overflow-hidden flex flex-col">
+<div class="flex justify-between items-start mb-6 z-10">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Active Route: Truck NPL-4502</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Kathmandu to Pokhara • ETA: 4h 15m</p>
+</div>
+<div class="bg-secondary-container/20 text-secondary px-3 py-1 rounded-full font-label-caps text-label-caps border border-secondary/10 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span> En Route
+                    </div>
+</div>
+<div class="flex-1 min-h-[200px] bg-surface-container-low rounded-lg border border-outline-variant/30 relative overflow-hidden flex items-center justify-center">
+<div class="absolute inset-0 bg-cover bg-center w-full h-full opacity-60" data-alt="A clean, minimalist 3D rendering of a topographic map view showing a route line winding through stylized green mountains, conveying precise agricultural logistics and modern transportation tracking. High-key lighting, soft drop shadows, premium tech aesthetic." data-location="Kathmandu to Pokhara Route Map" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC6-jMm2MMtxsKZO0lUaTP5K0DsKZ1hTwpHDWzYoASyrqqST7I67LwR8nMjq_d9fG_AtBrgDEwHvbDYYHt6EWOB4xzj2rWirThRafkqsFGqC5hWwQAWLeMePU75Lrj12uJrSS_soNt8Rm9oRKyOVEtfvc46mMVjKOv6aNTJRxqIAwM06eY1zFI9yN1eck6ayT-T1okWaVHYCbcdyEAvAHRGHugD5uPQ5Tp60Tt2snTUj3t9Ymm2XPGR')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent"></div>
+<!-- Fake route timeline overlay -->
+<div class="absolute bottom-4 left-4 right-4 glass-inset rounded-lg p-4 flex justify-between items-center z-10">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">DEPARTED</span>
+<span class="font-body-sm text-body-sm font-semibold">06:30 AM</span>
+</div>
+<div class="flex-1 px-4 flex items-center relative">
+<div class="h-1 w-full bg-outline-variant/30 rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[45%] rounded-full"></div>
+</div>
+<span class="material-symbols-outlined absolute left-[45%] -translate-x-1/2 -top-3 text-secondary" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+<div class="flex flex-col text-right">
+<span class="font-label-caps text-label-caps text-on-surface-variant">ETA</span>
+<span class="font-body-sm text-body-sm font-semibold text-secondary">11:45 AM</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Backhaul Opportunities -->
+<section class="md:col-span-4 glass-panel rounded-xl p-6 flex flex-col">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">sync_alt</span>
+                    Backhaul Loads
+                </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4">Optimize return trips from Pokhara.</p>
+<div class="flex flex-col gap-3 flex-1 overflow-y-auto">
+<!-- Load Item -->
+<div class="p-3 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<div class="font-body-sm text-body-sm font-semibold">Apples (Premium)</div>
+<div class="font-body-sm text-body-sm text-secondary font-semibold">NPR 45,000</div>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm mb-2">
+<span class="material-symbols-outlined text-[16px]">weight</span> 3.5 Tons
+                            <span class="mx-1">•</span>
+<span class="material-symbols-outlined text-[16px]">ac_unit</span> Temp Req.
+                        </div>
+<button class="w-full py-2 bg-primary-container/5 text-primary-container rounded-md font-label-caps text-label-caps group-hover:bg-primary-container group-hover:text-on-primary transition-colors border border-primary-container/20">Bid on Load</button>
+</div>
+<!-- Load Item -->
+<div class="p-3 rounded-lg border border-outline-variant/20 hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<div class="font-body-sm text-body-sm font-semibold">Fertilizer Sacks</div>
+<div class="font-body-sm text-body-sm text-secondary font-semibold">NPR 28,000</div>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm mb-2">
+<span class="material-symbols-outlined text-[16px]">weight</span> 5.0 Tons
+                            <span class="mx-1">•</span>
+<span class="material-symbols-outlined text-[16px]">dry</span> Dry Only
+                        </div>
+<button class="w-full py-2 bg-primary-container/5 text-primary-container rounded-md font-label-caps text-label-caps group-hover:bg-primary-container group-hover:text-on-primary transition-colors border border-primary-container/20">Bid on Load</button>
+</div>
+</div>
+</section>
+<!-- Delivery Metrics -->
+<section class="md:col-span-12 glass-panel rounded-xl p-6 mt-4">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Performance Metrics (This Month)</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="p-4 rounded-lg bg-surface-container-low border border-outline-variant/20">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">COMPLETED RUNS</div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">24</div>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-low border border-outline-variant/20">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">ON-TIME RATE</div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-secondary">98%</div>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-low border border-outline-variant/20">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">FUEL EFFICIENCY</div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">4.2 <span class="text-body-sm font-normal text-on-surface-variant">km/l</span></div>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-low border border-outline-variant/20">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">EARNINGS</div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">1.2M <span class="text-body-sm font-normal text-on-surface-variant">NPR</span></div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 w-full md:hidden rounded-t-xl z-50 pb-safe bg-surface/80 backdrop-blur-xl dark:bg-on-background/90 border-t border-white/10 dark:border-primary/10 shadow-[0_-8px_32px_0_rgba(0,0,0,0.08)] flex justify-around items-center h-20 px-4">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline active:bg-surface-container-highest scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline active:bg-surface-container-highest scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="font-label-caps text-label-caps mt-1">Market</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline active:bg-surface-container-highest scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-caps text-label-caps mt-1">AI Advisor</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed font-bold bg-secondary-container/20 rounded-full px-4 py-1 active:bg-surface-container-highest scale-110 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">package_2</span>
+<span class="font-label-caps text-label-caps mt-1">Logistics</span>
+</a>
+</nav>
+</body></html>

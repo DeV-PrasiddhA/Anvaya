@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgriLink Nepal - Farmer Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-highest": "#dae2fd",
+                      "secondary-container": "#8cf5b2",
+                      "outline-variant": "#c1c8c2",
+                      "on-primary-fixed": "#002114",
+                      "on-primary": "#ffffff",
+                      "secondary": "#006d3e",
+                      "tertiary": "#242623",
+                      "primary-fixed": "#c0edd3",
+                      "outline": "#717973",
+                      "inverse-on-surface": "#eef0ff",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed": "#8ff8b4",
+                      "tertiary-container": "#3a3c39",
+                      "on-tertiary-fixed": "#1a1c19",
+                      "on-secondary-fixed-variant": "#00522d",
+                      "on-background": "#131b2e",
+                      "on-secondary-container": "#007241",
+                      "tertiary-fixed": "#e3e3de",
+                      "error": "#ba1a1a",
+                      "surface-container-high": "#e2e7ff",
+                      "inverse-surface": "#283044",
+                      "secondary-fixed-dim": "#73db9a",
+                      "inverse-primary": "#a4d0b8",
+                      "background": "#faf8ff",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-variant": "#dae2fd",
+                      "surface-bright": "#faf8ff",
+                      "primary-container": "#1a4331",
+                      "surface-container": "#eaedff",
+                      "on-primary-container": "#85b098",
+                      "on-error": "#ffffff",
+                      "primary-fixed-dim": "#a4d0b8",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#264e3c",
+                      "on-surface": "#131b2e",
+                      "surface-tint": "#3e6752",
+                      "surface-dim": "#d2d9f4",
+                      "surface-container-low": "#f2f3ff",
+                      "on-tertiary-container": "#a5a6a2",
+                      "primary": "#002d1c",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed": "#00210f",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-fixed-dim": "#c6c7c2",
+                      "surface": "#faf8ff",
+                      "on-tertiary-fixed-variant": "#454744",
+                      "on-surface-variant": "#414944"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "xs": "4px",
+                      "xl": "32px",
+                      "md": "16px",
+                      "base": "4px",
+                      "lg": "24px",
+                      "margin-desktop": "48px",
+                      "gutter": "16px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-card-glow {
+            border-top: 1px solid rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-sm antialiased selection:bg-secondary-container selection:text-on-secondary-container flex min-h-screen">
+<!-- Desktop Sidebar (Hidden on Mobile) -->
+<aside class="fixed left-0 top-0 h-full w-64 hidden md:flex flex-col bg-primary dark:bg-on-background text-on-primary dark:text-primary-fixed border-r border-white/5 shadow-xl transition-all duration-300 ease-in-out py-6 gap-sm z-40">
+<div class="px-6 mb-8">
+<h1 class="font-headline-md text-headline-md text-secondary-fixed">Anvaya</h1>
+<p class="font-body-sm text-body-sm text-on-primary/70 mt-1">Premium Agricultural Hub</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<!-- Active Tab: Dashboard -->
+<a class="flex items-center gap-4 bg-secondary-container text-on-secondary-container rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="{{DATA:SCREEN:SCREEN_25}}">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="{{DATA:SCREEN:SCREEN_10}}">
+<span class="material-symbols-outlined">storefront</span>
+                Marketplace
+            </a>
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="{{DATA:SCREEN:SCREEN_9}}">
+<span class="material-symbols-outlined">monitoring</span>
+                Intelligence
+            </a>
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="{{DATA:SCREEN:SCREEN_6}}">
+<span class="material-symbols-outlined">local_shipping</span>
+                Logistics
+            </a>
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/20 rounded-xl px-4 py-3 font-body-lg text-body-lg mx-2 my-1 transition-colors group" href="#">
+<span class="material-symbols-outlined">groups</span>
+                Community
+            </a>
+</nav>
+<div class="mt-auto px-6 pt-6 border-t border-white/10 space-y-2">
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary transition-colors py-2" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-4 text-on-primary/70 hover:text-on-primary transition-colors py-2" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+<button class="mt-6 w-full py-3 bg-secondary text-on-secondary rounded-lg font-label-caps text-label-caps hover:bg-secondary/90 transition-colors shadow-sm">
+                Upgrade Plan
+            </button>
+</div>
+</aside>
+<!-- Top App Bar (Mobile & Desktop) -->
+<header class="fixed top-0 w-full z-30 bg-surface/80 backdrop-blur-xl dark:bg-on-background/80 border-b border-white/10 dark:border-primary/10 shadow-sm flex justify-between items-center h-16 px-margin-mobile md:px-margin-desktop md:pl-[calc(256px+48px)] transition-all">
+<div class="flex items-center gap-4">
+<!-- Mobile Menu Toggle (Placeholder) -->
+<button class="md:hidden text-primary dark:text-primary-fixed hover:bg-surface-container-high/50 p-2 rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed md:hidden">Anvaya</h2>
+<h2 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed hidden md:block">Overview</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container-high/50 p-2 rounded-full transition-colors active:scale-95 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high/50 p-2 rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 mt-16 md:ml-64 p-margin-mobile md:p-margin-desktop bg-surface-container-lowest pb-24 md:pb-margin-desktop">
+<!-- Header Section -->
+<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-1">Good Morning, Farmer</p>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Your Dashboard</h2>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 rounded-full bg-surface-container-low text-on-surface border border-outline-variant text-body-sm font-body-sm flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                    Last 30 Days
+                </button>
+</div>
+</div>
+<!-- Analytics Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-8">
+<!-- Revenue Card -->
+<div class="glass-panel glass-card-glow rounded-xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] relative overflow-hidden group hover:shadow-[0_12px_40px_0_rgba(0,0,0,0.08)] transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant">Total Revenue</p>
+<div class="p-2 bg-secondary-container/30 rounded-lg text-secondary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">रु 425,000</h3>
+<div class="flex items-center gap-1 text-secondary font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span class="">+12.5% vs last month</span>
+</div>
+<!-- Decorative background chart element -->
+<div class="absolute bottom-0 left-0 w-full h-16 opacity-10 pointer-events-none">
+<svg class="w-full h-full fill-secondary" preserveaspectratio="none" viewbox="0 0 100 40">
+<path d="M0 40 L0 30 L20 35 L40 20 L60 25 L80 10 L100 15 L100 40 Z"></path>
+</svg>
+</div>
+</div>
+<!-- Active Listings Card -->
+<div class="glass-panel glass-card-glow rounded-xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_0_rgba(0,0,0,0.08)] transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant">Active Listings</p>
+<div class="p-2 bg-primary-container/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">14</h3>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-caps text-label-caps">
+<span class="">3 listings expiring soon</span>
+</div>
+</div>
+<!-- Pending Orders Card -->
+<div class="glass-panel glass-card-glow rounded-xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_0_rgba(0,0,0,0.08)] transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant">Pending Orders</p>
+<div class="p-2 bg-error-container/50 rounded-lg text-error">
+<span class="material-symbols-outlined">local_shipping</span>
+</div>
+</div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">8</h3>
+<div class="flex items-center gap-1 text-error font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span class="">Needs attention today</span>
+</div>
+</div>
+</div>
+<!-- Middle Section: Weather & Trends -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-8">
+<!-- Weather Widget (1 column on large screens) -->
+<div class="glass-panel rounded-xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] lg:col-span-1 flex flex-col relative overflow-hidden">
+<!-- Background Image overlay -->
+<div class="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none mix-blend-overlay" data-alt="A macro shot of vibrant green agricultural crops under a bright, sunny sky with soft, fluffy clouds. The image is taken during golden hour, casting a warm, optimistic light over the field. The aesthetic is clean, natural, and high-definition, suited for a premium modern agricultural interface." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB6PBBLiDGXADhMIwFyRv-KzG4iFxs_UOIz4402muoLVTZPZ35abbktlWpF1gO8jV1y7CtZy7m9F-lrfnrqo8ZMCTyHbY3cdSEAt5uoHT-XK6Hu5tLIIdo3Sm0FEueo_mc2rzEXkzMLmfz5j0AnOVEB0Ud8msxuaefvPoRjymLwnocsP59JACPVG4homd2ewDgNT8lKV_L3bPISOujllIVN8Gz4TBwl18JIBaoSHRbkqsy02j9K24IE')"></div>
+<div class="relative z-10 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Kathmandu Valley</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Today's Forecast</p>
+</div>
+<span class="material-symbols-outlined text-[40px] text-secondary">partly_cloudy_day</span>
+</div>
+<div class="flex items-end gap-2 mb-6">
+<span class="text-[48px] font-bold leading-none tracking-tighter text-on-surface">24°</span>
+<span class="font-body-lg text-body-lg text-on-surface-variant mb-1">C</span>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-outline-variant/30">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Rainfall</p>
+<p class="font-body-sm text-body-sm font-semibold">12mm expected</p>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Humidity</p>
+<p class="font-body-sm text-body-sm font-semibold">65%</p>
+</div>
+</div>
+<div class="mt-auto bg-secondary-container/30 p-4 rounded-lg border border-secondary/20">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-1">psychology</span>
+<div>
+<p class="font-label-caps text-label-caps text-secondary font-bold mb-1">AI Advisor</p>
+<p class="font-body-sm text-body-sm text-on-secondary-container">Optimal soil moisture detected. Good time for nitrogen fertilizer application on organic ginger plots.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Price Trends Chart (2 columns on large screens) -->
+<div class="glass-panel rounded-xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] lg:col-span-2 flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Market Price Trends</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Wholesale price per KG (NPR)</p>
+</div>
+<div class="flex gap-2">
+<span class="inline-flex items-center gap-1 font-label-caps text-label-caps bg-surface-container-high px-2 py-1 rounded">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Organic Ginger
+                        </span>
+<span class="inline-flex items-center gap-1 font-label-caps text-label-caps bg-surface-container-high px-2 py-1 rounded">
+<span class="w-2 h-2 rounded-full bg-outline"></span> Red Onions
+                        </span>
+</div>
+</div>
+<!-- CSS-based placeholder chart for demonstration -->
+<div class="flex-1 relative min-h-[200px] w-full mt-4">
+<!-- Y-Axis labels -->
+<div class="absolute left-0 top-0 bottom-8 w-8 flex flex-col justify-between text-[10px] text-on-surface-variant text-right pr-2">
+<span class="">200</span>
+<span class="">150</span>
+<span class="">100</span>
+<span class="">50</span>
+</div>
+<!-- Chart Area -->
+<div class="absolute left-8 right-0 top-0 bottom-8 border-l border-b border-outline-variant/50 relative">
+<!-- Horizontal Grid Lines (subtle) -->
+<div class="absolute w-full h-full flex flex-col justify-between pointer-events-none">
+<div class="w-full border-t border-outline-variant/10 h-0"></div>
+<div class="w-full border-t border-outline-variant/10 h-0"></div>
+<div class="w-full border-t border-outline-variant/10 h-0"></div>
+<div class="w-full h-0"></div>
+</div>
+<!-- Data Lines (SVG for crispness) -->
+<svg class="absolute inset-0 w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 100 100">
+<!-- Organic Ginger (Secondary color) -->
+<path class="text-secondary drop-shadow-[0_2px_4px_rgba(0,109,62,0.3)]" d="M0,60 L16,55 L33,40 L50,45 L66,30 L83,20 L100,15" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<!-- Red Onions (Outline color) -->
+<path class="text-outline" d="M0,80 L16,85 L33,75 L50,80 L66,70 L83,75 L100,65" fill="none" stroke="currentColor" stroke-dasharray="4,4" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<!-- Data points (Ginger) -->
+<circle class="fill-surface stroke-secondary stroke-2" cx="16" cy="55" r="3" vector-effect="non-scaling-stroke"></circle>
+<circle class="fill-surface stroke-secondary stroke-2" cx="50" cy="45" r="3" vector-effect="non-scaling-stroke"></circle>
+<circle class="fill-surface stroke-secondary stroke-2" cx="83" cy="20" r="3" vector-effect="non-scaling-stroke"></circle>
+</svg>
+</div>
+<!-- X-Axis Labels -->
+<div class="absolute left-8 right-0 bottom-0 h-8 flex justify-between items-end text-[10px] text-on-surface-variant px-2">
+<span class="">Mon</span>
+<span class="">Tue</span>
+<span class="">Wed</span>
+<span class="">Thu</span>
+<span class="">Fri</span>
+<span class="">Sat</span>
+<span class="">Sun</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Orders Table Area -->
+<div class="glass-panel rounded-xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] overflow-x-auto">
+<div class="flex justify-between items-center mb-6 min-w-[600px]">
+<h3 class="font-headline-md text-headline-md text-on-surface">Recent Orders</h3>
+<a class="text-primary font-label-caps text-label-caps hover:underline" href="#">View All</a>
+</div>
+<table class="w-full text-left border-collapse min-w-[600px]">
+<thead>
+<tr class="border-b border-outline-variant/30 text-on-surface-variant font-label-caps text-label-caps">
+<th class="pb-3 pl-2 font-semibold">Order ID</th>
+<th class="pb-3 font-semibold">Product</th>
+<th class="pb-3 font-semibold">Quantity</th>
+<th class="pb-3 font-semibold">Status</th>
+<th class="pb-3 text-right pr-2 font-semibold">Amount (NPR)</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-body-sm divide-y divide-outline-variant/10">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 pl-2 text-on-surface-variant">#ORD-992</td>
+<td class="py-4 font-semibold text-on-surface">Organic Ginger</td>
+<td class="py-4">50 kg</td>
+<td class="py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-secondary-container/30 text-on-secondary-container text-[11px] font-bold">
+                                Completed
+                            </span>
+</td>
+<td class="py-4 text-right pr-2 font-semibold">12,500</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 pl-2 text-on-surface-variant">#ORD-993</td>
+<td class="py-4 font-semibold text-on-surface">Himalayan Apples</td>
+<td class="py-4">120 kg</td>
+<td class="py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-[#fff4e5] text-[#b26a00] text-[11px] font-bold">
+                                Processing
+                            </span>
+</td>
+<td class="py-4 text-right pr-2 font-semibold">28,800</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 pl-2 text-on-surface-variant">#ORD-994</td>
+<td class="py-4 font-semibold text-on-surface">Red Onions</td>
+<td class="py-4">200 kg</td>
+<td class="py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-[#f2f3ff] text-primary text-[11px] font-bold">
+                                Pending Transit
+                            </span>
+</td>
+<td class="py-4 text-right pr-2 font-semibold">16,000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</main>
+<!-- Floating Action Button (Create Listing) -->
+<a class="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-14 h-14 bg-secondary text-on-secondary rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center z-40 group" href="{{DATA:SCREEN:SCREEN_5}}">
+<span class="material-symbols-outlined text-[28px] group-hover:rotate-90 transition-transform duration-300">add</span>
+</a>
+<!-- Bottom Navigation Bar (Mobile Only) -->
+<nav class="fixed bottom-0 w-full md:hidden rounded-t-xl z-50 pb-safe bg-surface/80 backdrop-blur-xl dark:bg-on-background/90 border-t border-white/10 dark:border-primary/10 shadow-[0_-8px_32px_0_rgba(0,0,0,0.08)] flex justify-around items-center h-20 px-4">
+<!-- Active: Home (Mapping to Dashboard intent) -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed font-bold bg-secondary-container/20 rounded-full px-4 py-1 scale-110 transition-transform duration-200" href="{{DATA:SCREEN:SCREEN_25}}">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-caps text-[10px] mt-1 tracking-wider">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline active:bg-surface-container-highest rounded-full px-4 py-1 transition-colors" href="{{DATA:SCREEN:SCREEN_10}}">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="font-label-caps text-[10px] mt-1 tracking-wider">Market</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline active:bg-surface-container-highest rounded-full px-4 py-1 transition-colors relative" href="{{DATA:SCREEN:SCREEN_9}}">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-caps text-[10px] mt-1 tracking-wider">AI Advisor</span>
+<span class="absolute top-1 right-3 w-2 h-2 bg-secondary rounded-full"></span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline active:bg-surface-container-highest rounded-full px-4 py-1 transition-colors" href="{{DATA:SCREEN:SCREEN_6}}">
+<span class="material-symbols-outlined">package_2</span>
+<span class="font-label-caps text-[10px] mt-1 tracking-wider">Logistics</span>
+</a>
+</nav>
+</body></html>
