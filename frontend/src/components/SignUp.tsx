@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
 
+export interface UserProfile {
+  name: string;
+  role: 'Farmer' | 'Retailer' | 'Cooperative' | 'Transport Provider';
+  phone?: string;
+  province?: string;
+  district?: string;
+  ward?: string;
+  localLocation?: string;
+  extraField1?: string;
+  extraField2?: string;
+}
+
 interface SignUpProps {
   onNavigateBack: () => void;
-  onNavigateToDashboard?: (name: string) => void;
+  onNavigateToDashboard?: (profile: UserProfile) => void;
 }
 
 type Role = 'Farmer' | 'Retailer' | 'Cooperative' | 'Transport Provider';
@@ -82,6 +94,8 @@ export default function SignUp({ onNavigateBack, onNavigateToDashboard }: SignUp
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const currentRoleConfig = roles.find((r) => r.id === selectedRole) || roles[0];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.extraField1) {
@@ -89,15 +103,30 @@ export default function SignUp({ onNavigateBack, onNavigateToDashboard }: SignUp
       return;
     }
     // Simple validation for phone
-    if (!/^\d{10}$/.test(formData.phone)) {
+    if (!/^\d{10}$/.test(formData.phone.trim())) {
       setFormError('Please enter a valid 10-digit mobile number.');
       return;
     }
     setFormError('');
-    setPhase('success');
-  };
 
-  const currentRoleConfig = roles.find((r) => r.id === selectedRole);
+    const newProfile: UserProfile = {
+      name: formData.name.trim() || 'User',
+      role: selectedRole || 'Farmer',
+      phone: formData.phone.trim(),
+      province: formData.province,
+      district: formData.district,
+      ward: formData.ward,
+      localLocation: formData.localLocation,
+      extraField1: formData.extraField1,
+      extraField2: formData.extraField2,
+    };
+
+    if (onNavigateToDashboard) {
+      onNavigateToDashboard(newProfile);
+    } else {
+      setPhase('success');
+    }
+  };
 
   const nepalAdminData: Record<string, string[]> = {
     'Koshi Province': [
@@ -175,8 +204,13 @@ export default function SignUp({ onNavigateBack, onNavigateToDashboard }: SignUp
                 <button
                   key={role.id}
                   onClick={() => handleRoleClick(role.id)}
-                  className="role-card glass-panel rounded-xl p-6 flex flex-col items-start text-left cursor-pointer border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] bg-surface/80 group focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 w-full"
+                  className="role-card glass-panel rounded-xl p-6 flex flex-col items-start text-left cursor-pointer border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] bg-surface/80 group focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 w-full relative overflow-hidden"
                 >
+                  {role.id === 'Cooperative' && (
+                    <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-800 border border-amber-500/40">
+                      Coming Soon
+                    </span>
+                  )}
                   <div className="icon-container w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 text-primary">
                     <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
                       {role.icon}
@@ -414,7 +448,17 @@ export default function SignUp({ onNavigateBack, onNavigateToDashboard }: SignUp
               <button
                 onClick={() => {
                   if (onNavigateToDashboard) {
-                    onNavigateToDashboard(formData.name);
+                    onNavigateToDashboard({
+                      name: formData.name || 'User',
+                      role: selectedRole || 'Farmer',
+                      phone: formData.phone,
+                      province: formData.province,
+                      district: formData.district,
+                      ward: formData.ward,
+                      localLocation: formData.localLocation,
+                      extraField1: formData.extraField1,
+                      extraField2: formData.extraField2,
+                    });
                   } else {
                     onNavigateBack();
                   }
