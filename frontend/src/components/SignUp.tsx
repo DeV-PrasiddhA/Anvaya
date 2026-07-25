@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 
 interface SignUpProps {
   onNavigateBack: () => void;
+  onNavigateToDashboard?: (name: string) => void;
 }
 
 type Role = 'Farmer' | 'Retailer' | 'Cooperative' | 'Transport Provider';
 type Phase = 'select-role' | 'fill-form' | 'success';
 
-export default function SignUp({ onNavigateBack }: SignUpProps) {
+export default function SignUp({ onNavigateBack, onNavigateToDashboard }: SignUpProps) {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [phase, setPhase] = useState<Phase>('select-role');
 
@@ -15,7 +16,10 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    province: 'Bagmati Province',
     district: 'Kathmandu',
+    ward: '1',
+    localLocation: '',
     extraField1: '', // Tailored based on role (e.g. crop type, store name, vehicle capacity)
     extraField2: '', // (e.g. volume, member count, license plate)
   });
@@ -62,7 +66,10 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
     setFormData({
       name: '',
       phone: '',
+      province: 'Bagmati Province',
       district: 'Kathmandu',
+      ward: '1',
+      localLocation: '',
       extraField1: '',
       extraField2: '',
     });
@@ -92,10 +99,42 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
 
   const currentRoleConfig = roles.find((r) => r.id === selectedRole);
 
-  const districtsOfNepal = [
-    'Kathmandu', 'Lalitpur', 'Bhaktapur', 'Mustang', 'Jhapa', 'Morang', 
-    'Sunsari', 'Kaski', 'Chitwan', 'Rupandehi', 'Ilam', 'Dhankuta', 'Dolkha'
-  ];
+  const nepalAdminData: Record<string, string[]> = {
+    'Koshi Province': [
+      'Taplejung', 'Sankhuwasabha', 'Solukhumbu', 'Okhaldhunga', 'Khotang',
+      'Bhojpur', 'Dhankuta', 'Terhathum', 'Panchthar', 'Ilam',
+      'Jhapa', 'Morang', 'Sunsari', 'Udayapur',
+    ],
+    'Madhesh Province': [
+      'Saptari', 'Siraha', 'Dhanusha', 'Mahottari', 'Sarlahi',
+      'Rautahat', 'Bara', 'Parsa',
+    ],
+    'Bagmati Province': [
+      'Kathmandu', 'Lalitpur', 'Bhaktapur', 'Kavrepalanchok', 'Sindhupalchok',
+      'Dolakha', 'Ramechhap', 'Sindhuli', 'Makwanpur', 'Chitwan', 'Nuwakot',
+      'Rasuwa', 'Dhading',
+    ],
+    'Gandaki Province': [
+      'Kaski', 'Syangja', 'Parbat', 'Baglung', 'Myagdi', 'Mustang',
+      'Manang', 'Lamjung', 'Gorkha', 'Tanahun', 'Nawalpur',
+    ],
+    'Lumbini Province': [
+      'Rupandehi', 'Kapilvastu', 'Nawalparasi West', 'Palpa', 'Arghakhanchi',
+      'Gulmi', 'Pyuthan', 'Rolpa', 'Eastern Rukum', 'Banke', 'Bardiya', 'Dang',
+    ],
+    'Karnali Province': [
+      'Surkhet', 'Dailekh', 'Jajarkot', 'Western Rukum', 'Salyan',
+      'Dolpa', 'Mugu', 'Humla', 'Jumla', 'Kalikot',
+    ],
+    'Sudurpashchim Province': [
+      'Kailali', 'Kanchanpur', 'Dadeldhura', 'Doti', 'Achham',
+      'Bajura', 'Bajhang', 'Darchula', 'Baitadi',
+    ],
+  };
+
+  const provinces = Object.keys(nepalAdminData);
+  const districtsForProvince = nepalAdminData[formData.province] ?? [];
+  const wardNumbers = Array.from({ length: 35 }, (_, i) => String(i + 1));
 
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col relative overflow-x-hidden font-body-sm">
@@ -119,10 +158,10 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
         </div>
 
         {phase === 'select-role' && (
-          <div className="flex flex-col items-center justify-center w-full py-12">
+          <div className="flex flex-col items-center justify-center w-full py-16">
             {/* Header Section */}
-            <div className="text-center mb-8 w-full max-w-3xl animate-fade-in">
-              <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-2 font-bold tracking-tight">
+            <div className="text-center mb-10 w-full max-w-3xl animate-fade-in">
+              <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-3 font-bold tracking-tight">
                 Choose your role
               </h1>
               <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto">
@@ -222,6 +261,32 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
                 />
               </div>
 
+              {/* Province */}
+              <div>
+                <label className="block text-xs font-semibold text-primary mb-1 uppercase tracking-wider">
+                  Province *
+                </label>
+                <select
+                  name="province"
+                  value={formData.province}
+                  onChange={(e) => {
+                    const newProvince = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      province: newProvince,
+                      district: nepalAdminData[newProvince]?.[0] ?? '',
+                      ward: '1',
+                    }));
+                  }}
+                  className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/60 bg-surface/50 text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                >
+                  {provinces.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* District */}
               <div>
                 <label className="block text-xs font-semibold text-primary mb-1 uppercase tracking-wider">
                   District *
@@ -232,12 +297,42 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
                   onChange={handleInputChange}
                   className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/60 bg-surface/50 text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
                 >
-                  {districtsOfNepal.map((district) => (
-                    <option key={district} value={district}>
-                      {district}
-                    </option>
+                  {districtsForProvince.map((d) => (
+                    <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Ward and Local Location - side by side */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-primary mb-1 uppercase tracking-wider">
+                    Ward No. *
+                  </label>
+                  <select
+                    name="ward"
+                    value={formData.ward}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/60 bg-surface/50 text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                  >
+                    {wardNumbers.map((w) => (
+                      <option key={w} value={w}>Ward {w}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-primary mb-1 uppercase tracking-wider">
+                    Local Area
+                  </label>
+                  <input
+                    type="text"
+                    name="localLocation"
+                    value={formData.localLocation}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Thamel, Lakeside"
+                    className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/60 bg-surface/50 text-sm focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                  />
+                </div>
               </div>
 
               <div>
@@ -317,7 +412,13 @@ export default function SignUp({ onNavigateBack }: SignUpProps) {
 
             <div className="flex flex-col gap-3">
               <button
-                onClick={onNavigateBack}
+                onClick={() => {
+                  if (onNavigateToDashboard) {
+                    onNavigateToDashboard(formData.name);
+                  } else {
+                    onNavigateBack();
+                  }
+                }}
                 className="w-full bg-primary text-on-primary py-3 rounded-xl font-label-caps text-label-caps shadow-md hover:bg-primary-container hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer border-none"
               >
                 Go to Dashboard
