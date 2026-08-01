@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createProductInSupabase } from '../api';
 
 interface CreateListingProps {
   farmerName?: string;
@@ -34,8 +35,21 @@ export default function CreateListing({ farmerName = 'Farmer' }: CreateListingPr
   const [description, setDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    await createProductInSupabase({
+      seller_name: farmerName,
+      crop: crop || 'General Harvest',
+      district: district || 'Kathmandu',
+      price_npr: price || '0',
+      quantity: quantity || '0',
+      unit: unit || 'kg',
+      grade: grade || 'A',
+      harvest_date: harvestDate || undefined,
+      description: description || ''
+    });
+
     setSubmitted(true);
   };
 

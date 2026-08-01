@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import SignUp, { type UserProfile } from './components/SignUp'
 import Dashboard from './components/Dashboard'
+import { supabase } from './supabaseClient'
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'landing' | 'signup' | 'farmer-dashboard'>('landing');
@@ -16,6 +17,39 @@ function App() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [lang, setLang] = useState<'en' | 'ne'>('en');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+
+  // Listen for Supabase OAuth & Email session changes (e.g. Google Login redirect)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const user = session.user;
+        const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Farmer';
+        setFarmerName(profileName);
+        setUserProfile({
+          name: profileName,
+          email: user.email,
+          role: 'Farmer',
+        });
+        setCurrentPage('farmer-dashboard');
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const user = session.user;
+        const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Farmer';
+        setFarmerName(profileName);
+        setUserProfile({
+          name: profileName,
+          email: user.email,
+          role: 'Farmer',
+        });
+        setCurrentPage('farmer-dashboard');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const getCropPriceInfo = (crop: string) => {
     switch (crop) {

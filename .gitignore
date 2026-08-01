@@ -1,14 +1,24 @@
 # Dependency directories
 node_modules/
-jspm_packages/
-web_modules/
+**/node_modules/
 
 # Production/Distribution builds
 dist/
+**/dist/
 dist-ssr/
 build/
 out/
-/backend/dist/
+
+# Environmental / Secret Files
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/backend/.env
+**/frontend/.env
+!.env.example
+!**/.env.example
 
 # Logs
 logs
@@ -18,14 +28,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-# Environmental / Secret Files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.env
 
 # Diagnostic reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
