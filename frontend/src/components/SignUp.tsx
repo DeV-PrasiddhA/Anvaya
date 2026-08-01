@@ -412,7 +412,7 @@ export default function SignUp({ onNavigateBack, onNavigateToDashboard }: SignUp
           <div className="w-full max-w-md p-8 rounded-2xl glass-panel border border-white/20 bg-background/95 shadow-2xl text-center relative overflow-hidden">
             {/* Top Confetti Blobs */}
             <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-secondary via-secondary-fixed to-primary"></div>
-            
+
             <div className="w-20 h-20 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mx-auto mb-6 scale-110 shadow-inner">
               <span className="material-symbols-outlined text-5xl animate-bounce">check_circle</span>
             </div>
@@ -420,7 +420,7 @@ export default function SignUp({ onNavigateBack, onNavigateToDashboard }: SignUp
             <h2 className="font-headline-lg-mobile md:font-headline-lg text-primary font-bold tracking-tight mb-2">
               Registration Successful!
             </h2>
-            
+
             <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/20 text-left my-6 text-sm flex flex-col gap-2">
               <div className="flex justify-between border-b border-outline-variant/10 pb-1.5">
                 <span className="text-on-surface-variant">Profile Role:</span>

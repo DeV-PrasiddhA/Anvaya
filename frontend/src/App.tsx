@@ -101,13 +101,13 @@ function App() {
     setIsVoiceActive(true);
     setTimeout(() => {
       setIsVoiceActive(false);
-      const voiceQuery = lang === 'ne' 
-        ? 'झापा बजारमा अलैंचीको मूल्य कति छ?' 
+      const voiceQuery = lang === 'ne'
+        ? 'झापा बजारमा अलैंचीको मूल्य कति छ?'
         : 'What is the Cardamom floor price in Jhapa Market?';
       const voiceReply = lang === 'ne'
         ? '🎙️ आवाज विश्लेषण: झापा बजारमा अलैंचीको न्यूनतम मूल्य रु १,२५० प्रति किलो छ (+२.४% वृद्धि)।'
         : '🎙️ Voice Analysis: Jhapa Market Cardamom floor price is NPR 1,250/kg (+2.4% bullish).';
-      
+
       setChatMessages(prev => [
         ...prev,
         { sender: 'user', text: voiceQuery },
@@ -121,7 +121,7 @@ function App() {
     <div className="bg-background text-on-surface font-body-sm min-h-screen overflow-x-hidden selection:bg-secondary-container selection:text-on-secondary-container">
       {/* Top Navigation */}
       <header className="fixed top-0 w-full z-50 glass-panel border-b border-white/10 px-4 md:px-12 h-16 flex items-center justify-between">
-        <div 
+        <div
           onClick={() => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             if (window.location.hash) {
@@ -148,8 +148,8 @@ function App() {
             <span className="material-symbols-outlined text-base">translate</span>
             <span>{lang === 'en' ? 'नेपाली' : 'English'}</span>
           </button>
-          
-          <button 
+
+          <button
             onClick={() => setCurrentPage('signup')}
             className="bg-primary text-on-primary px-5 py-2.5 rounded-xl font-label-caps text-label-caps hover:bg-primary-container transition-all hover:scale-105 active:scale-95 shadow-sm cursor-pointer border-none"
           >
@@ -176,115 +176,117 @@ function App() {
 
       <main className="pt-28 pb-8">
         {/* Hero Section */}
-        <section className="px-4 md:px-12 py-8 md:py-20 flex flex-col lg:flex-row items-center gap-10 max-w-7xl mx-auto">
-          {/* Left Hero Content */}
-          <div className="w-full lg:w-1/2 flex flex-col gap-5 fade-in-up visible">
-            <div className="inline-flex items-center gap-2 bg-secondary-container/30 text-on-secondary-container px-3.5 py-1.5 rounded-full text-xs font-semibold w-fit border border-secondary/30">
-              <span className="w-2.5 h-2.5 rounded-full bg-secondary glow-pulse"></span>
-              Nepal's Direct Agricultural Exchange &amp; AI Network
+        <section className="px-4 md:px-12 py-8 md:py-12 flex flex-col items-center justify-center text-center max-w-5xl mx-auto min-h-[calc(100vh-6rem)]">
+          <div className="flex flex-col items-center gap-4 md:gap-5 fade-in-up visible w-full">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-800 px-3.5 py-1.5 rounded-full text-xs font-semibold border border-emerald-200/80">
+              <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+              Nepal's Direct Agricultural Exchange &amp; Logistics Network
             </div>
 
-            <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-5xl text-primary tracking-tight leading-tight font-bold">
-              Cultivating Connectivity: <br />
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl text-slate-900 tracking-tight leading-[1.15] font-extrabold max-w-4xl">
+              Empowering Nepal's Fields, <br />
               <span className="bg-gradient-to-r from-secondary via-emerald-600 to-primary bg-clip-text text-transparent">
-                Empowering Nepal's Fields,
-              </span> <br />
-              Elevating Nepal's Markets.
+                Connecting Direct Markets.
+              </span>
             </h1>
 
-            <p className="text-base md:text-lg text-on-surface-variant max-w-lg leading-relaxed block whitespace-normal">
-              Anvaya connects rural Nepalese growers directly with commercial buyers, cooperatives, and transport providers. Eliminate middlemen with AI price forecasts, QR produce traceability, location-wise price comparison, and live GPS freight tracking.
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 max-w-xl leading-relaxed">
+              Connecting Nepalese growers directly with buyers &amp; transporters — backed by AI price forecasts, QR produce traceability, and live GPS freight tracking.
             </p>
-            
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4 mt-2">
+
+            {/* Primary Action Buttons */}
+            <div className="flex flex-wrap gap-3 mt-1 justify-center">
               <button 
                 onClick={() => setCurrentPage('signup')}
-                className="bg-secondary text-on-secondary px-8 py-4 rounded-xl font-bold text-sm shadow-lg hover:bg-secondary/90 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center gap-2 border-none"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white px-7 py-3 rounded-xl font-semibold text-xs shadow-xs hover:-translate-y-0.5 transition-all cursor-pointer flex items-center gap-2 border-none"
               >
                 <span>Get Started Now</span>
-                <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
               </button>
               <a 
                 href="#features"
-                className="bg-surface-container-high text-primary px-7 py-4 rounded-xl font-bold text-sm border border-outline-variant/40 hover:bg-surface-container-highest hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 no-underline"
+                className="bg-white text-slate-800 px-6 py-3 rounded-xl font-semibold text-xs border border-slate-200 hover:bg-slate-50 hover:-translate-y-0.5 transition-all flex items-center gap-2 no-underline shadow-xs"
               >
                 Explore Features
               </a>
             </div>
-
-            {/* Suitable Role Icons */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
-              <button
-                onClick={() => setCurrentPage('signup')}
-                className="p-3 rounded-2xl bg-white/90 border border-outline-variant/30 text-primary text-xs font-bold hover:bg-secondary-container hover:text-on-secondary-container transition-all cursor-pointer flex items-center gap-2 shadow-xs"
-              >
-                <span className="material-symbols-outlined text-secondary text-base">agriculture</span>
-                <span>Farmer</span>
-              </button>
-
-              <button
-                onClick={() => setCurrentPage('signup')}
-                className="p-3 rounded-2xl bg-white/90 border border-outline-variant/30 text-primary text-xs font-bold hover:bg-secondary-container hover:text-on-secondary-container transition-all cursor-pointer flex items-center gap-2 shadow-xs"
-              >
-                <span className="material-symbols-outlined text-secondary text-base">storefront</span>
-                <span>Retailer</span>
-              </button>
-
-              <button
-                onClick={() => setCurrentPage('signup')}
-                className="p-3 rounded-2xl bg-white/90 border border-outline-variant/30 text-primary text-xs font-bold hover:bg-secondary-container hover:text-on-secondary-container transition-all cursor-pointer flex items-center justify-between gap-1 shadow-xs relative"
-              >
-                <div className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-secondary text-base">groups</span>
-                  <span>Cooperative</span>
-                </div>
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-500/20 text-amber-800 border border-amber-500/30">Soon</span>
-              </button>
-
-              <button
-                onClick={() => setCurrentPage('signup')}
-                className="p-3 rounded-2xl bg-white/90 border border-outline-variant/30 text-primary text-xs font-bold hover:bg-secondary-container hover:text-on-secondary-container transition-all cursor-pointer flex items-center gap-2 shadow-xs"
-              >
-                <span className="material-symbols-outlined text-secondary text-base">local_shipping</span>
-                <span>Transport</span>
-              </button>
-            </div>
-          </div>
-          
-          {/* Right Hero Visual Card */}
-          <div className="w-full lg:w-1/2 relative rounded-3xl overflow-hidden glass-panel p-3 border border-white/60 shadow-xl">
-            <img 
-              className="w-full aspect-video lg:aspect-square rounded-2xl object-cover shadow-sm hover:scale-[1.01] transition-transform duration-500" 
-              src="/smart_farm_nepal.png"
-              alt="Nepalese Smart Farm Telemetry Illustration"
-            />
             
-            {/* Top Floating Floor Price Badge */}
-            <div className="absolute top-6 right-6 p-3.5 rounded-2xl bg-slate-900/95 text-white shadow-2xl border border-white/30 flex items-center gap-3 text-xs font-bold backdrop-blur-md z-10">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/25 text-emerald-400 flex items-center justify-center border border-emerald-500/40 shrink-0">
-                <span className="material-symbols-outlined text-base font-extrabold" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-slate-300 uppercase tracking-wider font-semibold">Jhapa Market Hub</span>
-                <span className="text-xs font-extrabold text-white">Cardamom Floor: <strong className="text-emerald-400 font-mono text-sm">NPR 1,250/kg</strong> <span className="text-[11px] text-emerald-400 font-bold ml-1">(+2.4%)</span></span>
-              </div>
-            </div>
+            {/* 4 Role Entrance Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 w-full">
+              {/* Farmer Entrance */}
+              <button
+                onClick={() => setCurrentPage('signup')}
+                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-emerald-600 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col items-center text-center justify-between group min-h-[170px]"
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-100 group-hover:bg-emerald-700 group-hover:text-white transition-colors">
+                    <span className="material-symbols-outlined text-xl">agriculture</span>
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-sm mt-3">Farmer</h3>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">List harvest yields &amp; get direct floor prices</p>
+                </div>
+                <div className="mt-3.5 pt-2.5 border-t border-slate-100 w-full flex items-center justify-center gap-1 text-xs font-bold text-emerald-700 group-hover:text-emerald-800">
+                  <span>Get Started</span>
+                  <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                </div>
+              </button>
 
-            {/* Bottom Telemetry Card */}
-            <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl glass-panel border border-white/40 bg-white/95 shadow-2xl flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center text-secondary">
-                  <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>sensors</span>
+              {/* Retailer Entrance */}
+              <button
+                onClick={() => setCurrentPage('signup')}
+                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-emerald-600 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col items-center text-center justify-between group min-h-[170px]"
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-100 group-hover:bg-emerald-700 group-hover:text-white transition-colors">
+                    <span className="material-symbols-outlined text-xl">storefront</span>
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-sm mt-3">Retailer</h3>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">Source bulk produce direct from growers</p>
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-primary">Mustang IoT Weather Station</h4>
-                  <p className="text-[11px] text-on-surface-variant font-medium">Soil Moisture: 72% • Rain: 12mm Expected</p>
+                <div className="mt-3.5 pt-2.5 border-t border-slate-100 w-full flex items-center justify-center gap-1 text-xs font-bold text-emerald-700 group-hover:text-emerald-800">
+                  <span>Browse Market</span>
+                  <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
                 </div>
-              </div>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-secondary/15 text-secondary border border-secondary/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span> Live
-              </span>
+              </button>
+
+              {/* Cooperative Entrance */}
+              <button
+                onClick={() => setCurrentPage('signup')}
+                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-amber-500 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col items-center text-center justify-between group min-h-[170px] relative"
+              >
+                <span className="absolute top-3.5 right-3.5 px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                  Coming Soon
+                </span>
+                <div className="flex flex-col items-center">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center border border-amber-100 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                    <span className="material-symbols-outlined text-xl">groups</span>
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-sm mt-3">Cooperative</h3>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">Aggregate member harvest pools &amp; auctions</p>
+                </div>
+                <div className="mt-3.5 pt-2.5 border-t border-slate-100 w-full flex items-center justify-center gap-1 text-xs font-bold text-amber-700 group-hover:text-amber-800">
+                  <span>Preview Teaser</span>
+                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </div>
+              </button>
+
+              {/* Transport Entrance */}
+              <button
+                onClick={() => setCurrentPage('signup')}
+                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-emerald-600 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col items-center text-center justify-between group min-h-[170px]"
+              >
+                <div className="flex flex-col items-center">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-100 group-hover:bg-emerald-700 group-hover:text-white transition-colors">
+                    <span className="material-symbols-outlined text-xl">local_shipping</span>
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-sm mt-3">Transport</h3>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">Accept highway cargo loads &amp; live GPS</p>
+                </div>
+                <div className="mt-3.5 pt-2.5 border-t border-slate-100 w-full flex items-center justify-center gap-1 text-xs font-bold text-emerald-700 group-hover:text-emerald-800">
+                  <span>Load Board</span>
+                  <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+                </div>
+              </button>
             </div>
           </div>
         </section>
@@ -405,9 +407,8 @@ function App() {
                     <button
                       key={crop}
                       onClick={() => setRoiCrop(crop)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                        roiCrop === crop ? 'bg-secondary text-on-secondary border-secondary shadow-xs' : 'bg-white text-on-surface border-outline-variant/40 hover:border-secondary'
-                      }`}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${roiCrop === crop ? 'bg-secondary text-on-secondary border-secondary shadow-xs' : 'bg-white text-on-surface border-outline-variant/40 hover:border-secondary'
+                        }`}
                     >
                       {crop}
                     </button>
@@ -476,7 +477,7 @@ function App() {
               Anvaya connects cultivation directly to commercial buyers with transparency, speed, and logistics support.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="relative p-6 rounded-3xl bg-white/90 glass-panel border border-outline-variant/15 flex flex-col gap-2 shadow-xs hover:-translate-y-1 transition-all duration-300">
               <span className="absolute top-4 right-4 text-3xl font-extrabold text-secondary/20">01</span>
@@ -486,7 +487,7 @@ function App() {
               <h3 className="font-bold text-primary text-lg">Create Crop Listing</h3>
               <p className="text-xs text-on-surface-variant leading-relaxed">Farmers specify crop name, price/kg, quantity, quality grade, harvest date, and storefront location.</p>
             </div>
-            
+
             <div className="relative p-6 rounded-3xl bg-white/90 glass-panel border border-outline-variant/15 flex flex-col gap-2 shadow-xs hover:-translate-y-1 transition-all duration-300">
               <span className="absolute top-4 right-4 text-3xl font-extrabold text-secondary/20">02</span>
               <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary mb-2">
@@ -502,7 +503,7 @@ function App() {
                 <span className="material-symbols-outlined text-xs">arrow_forward</span>
               </button>
             </div>
-            
+
             <div className="relative p-6 rounded-3xl bg-white/90 glass-panel border border-outline-variant/15 flex flex-col gap-2 shadow-xs hover:-translate-y-1 transition-all duration-300">
               <span className="absolute top-4 right-4 text-3xl font-extrabold text-secondary/20">03</span>
               <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary mb-2">
@@ -511,7 +512,7 @@ function App() {
               <h3 className="font-bold text-primary text-lg">Live GPS Freight Tracking</h3>
               <p className="text-xs text-on-surface-variant leading-relaxed">Retailers buy direct and track logistics trucks moving live along Nepalese highway routes.</p>
             </div>
-            
+
             <div className="relative p-6 rounded-3xl bg-white/90 glass-panel border border-outline-variant/15 flex flex-col gap-2 shadow-xs hover:-translate-y-1 transition-all duration-300">
               <span className="absolute top-4 right-4 text-3xl font-extrabold text-secondary/20">04</span>
               <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary mb-2">
@@ -532,7 +533,7 @@ function App() {
               Every feature rural farmers, cooperatives, retailers, and transporters require to thrive.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="glass-panel p-6 rounded-3xl flex flex-col gap-3 hover:-translate-y-1 transition-all duration-300 shadow-xs border border-outline-variant/15 bg-white/90">
               <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary">
@@ -584,7 +585,7 @@ function App() {
               <h2 className="text-2xl md:text-4xl font-bold text-primary mt-2 mb-3">Partner Stories across Nepal</h2>
               <p className="text-sm text-on-surface-variant">Read how farmers, buyers, and transporters are transforming trade with Anvaya.</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="glass-panel p-8 rounded-3xl flex flex-col justify-between gap-4 border border-outline-variant/10 bg-white/90 shadow-xs">
                 <p className="text-sm italic text-on-surface-variant leading-relaxed">
@@ -621,7 +622,7 @@ function App() {
           <p className="text-sm md:text-base text-on-primary/80 max-w-2xl leading-relaxed">
             Join thousands of modern Nepalese growers, retailers, cooperatives, and transporters on the smart agricultural exchange network.
           </p>
-          <button 
+          <button
             onClick={() => setCurrentPage('signup')}
             className="mt-2 bg-secondary text-on-secondary px-9 py-4 rounded-xl font-bold text-sm shadow-xl hover:bg-secondary/90 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border-none"
           >
@@ -664,7 +665,7 @@ function App() {
       {/* Floating Mock AI Assistant Preview */}
       <div className="fixed bottom-6 right-6 z-50">
         {!isAiOpen ? (
-          <button 
+          <button
             onClick={() => setIsAiOpen(true)}
             className="w-14 h-14 bg-secondary text-on-secondary rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all duration-300 animate-bounce cursor-pointer"
             title="Ask Anvaya AI"
@@ -682,14 +683,14 @@ function App() {
                   <p className="text-[10px] text-on-primary-container">Nepal Weather & Market Models</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsAiOpen(false)}
                 className="text-on-primary/75 hover:text-on-primary transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-xl">close</span>
               </button>
             </div>
-            
+
             {/* Messages Body */}
             <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-3 min-h-[200px] text-xs">
               {chatMessages.map((msg, i) => (
@@ -706,30 +707,29 @@ function App() {
               <button
                 onClick={handleVoiceInput}
                 disabled={isVoiceActive}
-                className={`w-full py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
-                  isVoiceActive ? 'bg-error text-on-error animate-pulse' : 'bg-secondary text-on-secondary hover:bg-secondary/90'
-                }`}
+                className={`w-full py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${isVoiceActive ? 'bg-error text-on-error animate-pulse' : 'bg-secondary text-on-secondary hover:bg-secondary/90'
+                  }`}
               >
                 <span className="material-symbols-outlined text-base">mic</span>
                 <span>{isVoiceActive ? (lang === 'ne' ? 'सुनिरहेको छ...' : 'Listening to Voice Query...') : (lang === 'ne' ? '🎤 बोलि मार्फत सोध्नुहोस्' : '🎤 Speak Voice Inquiry')}</span>
               </button>
 
               <div className="flex flex-wrap gap-1.5 justify-center">
-                <button 
+                <button
                   onClick={() => handleAiSelect('weather')}
                   className="px-2 py-1 rounded-lg bg-surface-container-highest hover:bg-secondary-container hover:text-on-secondary-container transition-all text-[10px] font-semibold text-primary cursor-pointer flex items-center gap-1 border-none"
                 >
                   <span className="material-symbols-outlined text-xs text-secondary">partly_cloudy_day</span>
                   <span>{lang === 'ne' ? 'मौसम पूर्वानुमान' : 'Weather Forecast'}</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handleAiSelect('prices')}
                   className="px-2 py-1 rounded-lg bg-surface-container-highest hover:bg-secondary-container hover:text-on-secondary-container transition-all text-[10px] font-semibold text-primary cursor-pointer flex items-center gap-1 border-none"
                 >
                   <span className="material-symbols-outlined text-xs text-secondary">trending_up</span>
                   <span>{lang === 'ne' ? 'अलैंचीको मूल्य' : 'Cardamom Prices'}</span>
                 </button>
-                <button 
+                <button
                   onClick={() => handleAiSelect('soil')}
                   className="px-2 py-1 rounded-lg bg-surface-container-highest hover:bg-secondary-container hover:text-on-secondary-container transition-all text-[10px] font-semibold text-primary cursor-pointer flex items-center gap-1 border-none"
                 >
