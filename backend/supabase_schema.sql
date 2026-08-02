@@ -125,6 +125,53 @@ CREATE TABLE IF NOT EXISTS public.market_prices (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 7. KALIMATI DAILY PRICE SNAPSHOTS
+-- The scraper writes one row per commodity and published Nepal date.  This
+-- table is separate from the legacy demo market_prices table above.
+CREATE TABLE IF NOT EXISTS public.kalimati_daily_prices (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    price_date DATE NOT NULL,
+    commodity_name_ne TEXT NOT NULL,
+    commodity_name_en TEXT,
+    unit_ne TEXT NOT NULL,
+    unit_en TEXT,
+    minimum_price_npr NUMERIC NOT NULL,
+    maximum_price_npr NUMERIC NOT NULL,
+    average_price_npr NUMERIC NOT NULL,
+    market TEXT NOT NULL DEFAULT 'Kalimati',
+    source TEXT NOT NULL DEFAULT 'Kalimati Market Development Board',
+    source_url TEXT NOT NULL DEFAULT 'https://kalimatimarket.gov.np/price',
+    collected_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE (price_date, commodity_name_ne, unit_ne)
+);
+
+CREATE INDEX IF NOT EXISTS kalimati_daily_prices_date_idx
+    ON public.kalimati_daily_prices (price_date DESC);
+
+ALTER TABLE public.kalimati_daily_prices ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can read Kalimati daily prices"
+    ON public.kalimati_daily_prices;
+CREATE POLICY "Public can read Kalimati daily prices"
+    ON public.kalimati_daily_prices
+    FOR SELECT
+    TO anon, authenticated
+    USING (true);
+
+-- Permanent, tiny cache for Gemini translations. This is intentionally
+-- separate from the rolling seven-day price history so a commodity is only
+-- translated once unless its source spelling changes.
+CREATE TABLE IF NOT EXISTS public.kalimati_commodity_translations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    commodity_name_ne TEXT UNIQUE NOT NULL,
+    commodity_name_en TEXT NOT NULL,
+    translation_model TEXT NOT NULL,
+    translated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.kalimati_commodity_translations ENABLE ROW LEVEL SECURITY;
+
 -- ================================================================
 -- INITIAL SEED DATA FOR MARKET PRICES
 -- ================================================================

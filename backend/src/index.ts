@@ -402,16 +402,59 @@ app.post('/api/products', async (req: Request, res: Response) => {
  */
 app.get('/api/market-prices', async (req: Request, res: Response) => {
   try {
-    const { data, error } = await supabase
-      .from('market_prices')
+    const { data: rows, error } = await supabase
+      .from('kalimati_daily_prices')
       .select('*')
-      .order('crop_name', { ascending: true });
+      .order('price_date', { ascending: false })
+      .order('commodity_name_en', { ascending: true })
+      .limit(1000);
 
     if (error) {
       return res.status(400).json({ error: error.message });
     }
+    if (!rows?.length) {
+      return res.json({ prices: [] });
+    }
 
-    res.json({ prices: data });
+    const publishedDates = [...new Set(rows.map((row: any) => row.price_date))];
+    const latestDate = publishedDates[0];
+    const previousDate = publishedDates[1];
+    const previousRows = rows.filter((row: any) => row.price_date === previousDate);
+
+    const prices = rows
+      .filter((row: any) => row.price_date === latestDate)
+      .map((row: any) => {
+        const previousRow = previousRows.find(
+          (candidate: any) =>
+            candidate.commodity_name_ne === row.commodity_name_ne &&
+            candidate.unit_ne === row.unit_ne,
+        );
+        const price = Number(row.average_price_npr);
+        const previousPrice = previousRow ? Number(previousRow.average_price_npr) : null;
+        const changeAmount = previousPrice === null ? null : price - previousPrice;
+        const changePercent = previousPrice === null || previousPrice === 0
+          ? null
+          : ((price - previousPrice) / previousPrice) * 100;
+
+        return {
+      id: row.id,
+      crop_name: row.commodity_name_en || row.commodity_name_ne,
+      crop_name_ne: row.commodity_name_ne,
+      hub_name: row.market,
+      price_npr: price,
+      minimum_price_npr: Number(row.minimum_price_npr),
+      maximum_price_npr: Number(row.maximum_price_npr),
+      unit: row.unit_en || row.unit_ne,
+      price_date: row.price_date,
+      source: row.source,
+          previous_price_npr: previousPrice,
+          change_amount_npr: changeAmount,
+          change_percent: changePercent,
+          is_up: changeAmount === null ? null : changeAmount >= 0,
+        };
+      });
+
+    res.json({ prices });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to fetch market prices' });
   }
@@ -425,4 +468,3 @@ app.use((req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
-
