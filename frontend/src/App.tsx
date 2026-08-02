@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import SignUp, { type UserProfile } from './components/SignUp'
 import Dashboard from './components/Dashboard'
 import { supabase } from './supabaseClient'
-import { fetchUserProfile, registerUserInSupabase } from './api'
+import { fetchMarketPricesFromSupabase, fetchUserProfile, registerUserInSupabase, type MarketPrice } from './api'
 
 function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | undefined>(() => {
@@ -44,12 +44,34 @@ function App() {
     { sender: 'ai', text: 'Namaste! I am the Anvaya Agricultural Assistant. I can forecast weather trends, monitor soil analytics, or estimate floor prices. Select a topic below to test:' }
   ]);
 
-  const [roiCrop, setRoiCrop] = useState<'Cardamom' | 'Tea' | 'Ginger' | 'Potato' | 'Apple'>('Cardamom');
+  const [roiCrop, setRoiCrop] = useState('');
   const [roiQty, setRoiQty] = useState<number>(500);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [lang, setLang] = useState<'en' | 'ne'>('en');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [authErrorNotice, setAuthErrorNotice] = useState<string | null>(null);
+  const [marketPrices, setMarketPrices] = useState<MarketPrice[]>([]);
+  const [marketPricesLoading, setMarketPricesLoading] = useState(true);
+  const [marketPriceSearch, setMarketPriceSearch] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchMarketPricesFromSupabase().then((prices) => {
+      if (isMounted) {
+        setMarketPrices(prices);
+        setMarketPricesLoading(false);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!roiCrop && marketPrices[0]) {
+      setRoiCrop(marketPrices[0].crop_name);
+    }
+  }, [marketPrices, roiCrop]);
 
   const handleAuthUserSession = async (user: any) => {
     try {
@@ -187,21 +209,24 @@ function App() {
   }, []);
 
   const getCropPriceInfo = (crop: string) => {
-    switch (crop) {
-      case 'Cardamom': return { price: 1250, brokerPrice: 920, unit: 'kg' };
-      case 'Tea': return { price: 850, brokerPrice: 620, unit: 'kg' };
-      case 'Ginger': return { price: 160, brokerPrice: 110, unit: 'kg' };
-      case 'Apple': return { price: 280, brokerPrice: 190, unit: 'kg' };
-      case 'Potato':
-      default: return { price: 65, brokerPrice: 42, unit: 'kg' };
+    const match = marketPrices.find((item) => item.crop_name === crop);
+
+    if (match) {
+      return {
+        price: match.price_npr,
+        brokerPrice: match.minimum_price_npr,
+        unit: match.unit,
+      };
     }
+
+    return { price: 0, brokerPrice: 0, unit: 'kg' };
   };
 
   const activePriceInfo = getCropPriceInfo(roiCrop);
   const anvayaPayout = activePriceInfo.price * roiQty;
   const brokerPayout = activePriceInfo.brokerPrice * roiQty;
   const netExtraProfit = anvayaPayout - brokerPayout;
-  const profitPercentage = Math.round((netExtraProfit / brokerPayout) * 100);
+  const profitPercentage = brokerPayout ? Math.round((netExtraProfit / brokerPayout) * 100) : 0;
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -222,7 +247,10 @@ function App() {
     if (topic === 'weather') {
       responseText = 'Based on satellite feeds for Mustang: Expect clear skies and optimal harvesting weather for the next 5 days. Minimal frost risk.';
     } else if (topic === 'prices') {
-      responseText = 'Current floor price for Large Cardamom (Jhapa Hub) is NPR 1,250/kg, up 2.4% from yesterday. Demand remains high in regional markets.';
+      const firstPrice = marketPrices[0];
+      responseText = firstPrice
+        ? `Latest Kalimati price for ${firstPrice.crop_name} is NPR ${firstPrice.price_npr.toLocaleString()}/${firstPrice.unit}.`
+        : 'Live Kalimati prices are not available yet. Please try again after the daily import runs.';
     } else {
       responseText = 'Recommended soil enrichment for Potato farming in Pokhara: Nitrogen-rich organic humus compost. Keep moisture at 70-75% this week.';
     }
@@ -234,18 +262,27 @@ function App() {
     ]);
   };
 
-  const cropTickerItems = [
-    { name: 'Cardamom (Elaichi)', price: 'NPR 1,250/kg', change: '+2.4%', up: true },
-    { name: 'Orthodox Tea', price: 'NPR 850/kg', change: '-0.8%', up: false },
-    { name: 'Mustang Apple', price: 'NPR 280/kg', change: '+4.1%', up: true },
-    { name: 'Red Potato', price: 'NPR 65/kg', change: '+1.2%', up: true },
-    { name: 'Ginger (Aduwa)', price: 'NPR 160/kg', change: '+5.7%', up: true },
-    { name: 'Cabbage (Banda)', price: 'NPR 45/kg', change: '-3.2%', up: false },
-    { name: 'Cauliflower', price: 'NPR 80/kg', change: '+0.5%', up: true }
-  ];
+  const cropTickerItems = marketPrices.map((item) => ({
+    name: item.crop_name,
+    price: `NPR ${item.price_npr.toLocaleString()}/${item.unit}`,
+    change: item.change_percent === null
+      ? 'new'
+      : `${item.change_percent >= 0 ? '+' : ''}${item.change_percent.toFixed(1)}% vs prior day`,
+    up: item.is_up ?? true,
+  }));
 
   // Duplicate items for seamless continuous loop
+  const getMarketDisplayName = (item: MarketPrice) => (
+    lang === 'ne' ? item.crop_name_ne : item.crop_name
+  );
+
   const tickerList = [...cropTickerItems, ...cropTickerItems];
+  const filteredMarketPrices = marketPrices.filter((item) => {
+    const search = marketPriceSearch.trim().toLowerCase();
+    if (!search) return true;
+    return [item.crop_name, item.crop_name_ne, item.market, item.unit]
+      .some((value) => value.toLowerCase().includes(search));
+  });
 
   if (currentPage === 'farmer-dashboard') {
     return (
@@ -290,9 +327,14 @@ function App() {
       const voiceQuery = lang === 'ne'
         ? 'झापा बजारमा अलैंचीको मूल्य कति छ?'
         : 'What is the Cardamom floor price in Jhapa Market?';
+      const firstPrice = marketPrices[0];
       const voiceReply = lang === 'ne'
-        ? '🎙️ आवाज विश्लेषण: झापा बजारमा अलैंचीको न्यूनतम मूल्य रु १,२५० प्रति किलो छ (+२.४% वृद्धि)।'
-        : '🎙️ Voice Analysis: Jhapa Market Cardamom floor price is NPR 1,250/kg (+2.4% bullish).';
+        ? firstPrice
+          ? `🎙️ आवाज विश्लेषण: ${firstPrice.crop_name_ne} को औसत मूल्य रु ${firstPrice.price_npr.toLocaleString()} प्रति ${firstPrice.unit} छ।`
+          : '🎙️ आवाज विश्लेषण: आजको कालीमाटी मूल्य उपलब्ध छैन।'
+        : firstPrice
+          ? `🎙️ Voice Analysis: ${firstPrice.crop_name} averages NPR ${firstPrice.price_npr.toLocaleString()}/${firstPrice.unit} at Kalimati.`
+          : '🎙️ Voice Analysis: today’s Kalimati prices are not available yet.';
 
       setChatMessages(prev => [
         ...prev,
@@ -346,14 +388,18 @@ function App() {
 
       {/* Live Market Ticker */}
       <div className="fixed top-16 w-full z-40 bg-surface-container border-b border-outline-variant/20 py-2 overflow-hidden select-none">
-        <div className="animate-ticker flex items-center gap-8 whitespace-nowrap">
+        <div
+          className="animate-ticker flex items-center gap-8 whitespace-nowrap"
+          style={{ '--ticker-duration': `${Math.max(60, marketPrices.length * 4)}s` } as CSSProperties}
+        >
+          {marketPricesLoading && <span className="px-4 text-xs text-on-surface-variant">Loading today's Kalimati prices…</span>}
+          {!marketPricesLoading && !tickerList.length && <span className="px-4 text-xs text-on-surface-variant">No Kalimati prices imported yet.</span>}
           {tickerList.map((item, index) => (
             <div key={index} className="flex items-center gap-2 px-4 border-r border-outline-variant/30">
-              <span className="font-semibold text-primary">{item.name}</span>
+              <span className="font-semibold text-primary">{lang === 'ne' ? marketPrices[index % Math.max(marketPrices.length, 1)]?.crop_name_ne || item.name : item.name}</span>
               <span className="text-on-surface-variant">{item.price}</span>
-              <span className={`flex items-center text-xs font-bold gap-0.5 ${item.up ? 'text-secondary' : 'text-error'}`}>
-                <span className="material-symbols-outlined text-sm">{item.up ? 'trending_up' : 'trending_down'}</span>
-                <span>{item.change}</span>
+              <span className="text-xs font-bold text-on-surface-variant">
+                {item.change}
               </span>
             </div>
           ))}
@@ -513,62 +559,73 @@ function App() {
 
         {/* Location-Wise Market Price Comparison Feature */}
         <section className="px-4 md:px-12 py-12 md:py-20 max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="px-3 py-1 rounded-full bg-secondary/15 text-secondary text-xs font-bold">Real-Time Market Data</span>
-            <h2 className="text-2xl md:text-4xl font-bold text-primary mt-2 mb-3">Location-Wise Market Price Comparison</h2>
-            <p className="text-sm text-on-surface-variant">Compare live wholesale produce floor prices across major Nepalese agricultural hubs.</p>
+          <div className="mb-12 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div className="text-center lg:text-left max-w-2xl">
+              <span className="px-3 py-1 rounded-full bg-secondary/15 text-secondary text-xs font-bold">Real-Time Market Data</span>
+              <h2 className="text-2xl md:text-4xl font-bold text-primary mt-2 mb-3">Location-Wise Market Price Comparison</h2>
+              <p className="text-sm text-on-surface-variant">Compare live wholesale produce floor prices across major Nepalese agricultural hubs.</p>
+            </div>
+            <label className="relative w-full lg:w-80 shrink-0">
+              <span className="sr-only">Search market prices</span>
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-on-surface-variant">search</span>
+              <input
+                type="search"
+                value={marketPriceSearch}
+                onChange={(event) => setMarketPriceSearch(event.target.value)}
+                placeholder={lang === 'ne' ? 'वस्तु वा बजार खोज्नुहोस्' : 'Search commodity or market'}
+                className="w-full rounded-xl border border-outline-variant/40 bg-white px-10 py-3 text-xs text-primary outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+              />
+            </label>
           </div>
 
           <div className="bg-white/90 glass-panel rounded-3xl p-6 border border-white/60 shadow-md overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[650px] text-xs">
+              <div className="max-h-[500px] overflow-y-auto pr-1">
+              <table className="w-full text-left border-collapse min-w-[900px] text-xs">
                 <thead>
-                  <tr className="border-b border-outline-variant/30 text-on-surface-variant font-bold uppercase tracking-wider bg-surface-container-low">
+                  <tr className="sticky top-0 z-10 border-b border-outline-variant/30 text-on-surface-variant font-bold uppercase tracking-wider bg-surface-container-low">
                     <th className="py-3.5 pl-4">Crop / Commodity</th>
                     <th className="py-3.5">Unit</th>
-                    <th className="py-3.5">Kathmandu (Kalimati)</th>
-                    <th className="py-3.5">Jhapa (Birtamod)</th>
-                    <th className="py-3.5">Pokhara (Kaski)</th>
-                    <th className="py-3.5">Mustang (Marpha)</th>
-                    <th className="py-3.5 text-right pr-4">24h Trajectory</th>
+                    <th className="py-3.5">Minimum</th>
+                    <th className="py-3.5">Average</th>
+                    <th className="py-3.5">Previous day</th>
+                    <th className="py-3.5">Change</th>
+                    <th className="py-3.5">Maximum</th>
+                    <th className="py-3.5">Market</th>
+                    <th className="py-3.5 text-right pr-4">Price date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/15 text-sm">
-                  <tr className="hover:bg-surface-container-low/60 transition-colors">
-                    <td className="py-3.5 pl-4 font-bold text-primary flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-secondary"></span> Large Cardamom (Elaichi)
-                    </td>
-                    <td className="py-3.5 text-xs text-on-surface-variant">NPR / kg</td>
-                    <td className="py-3.5 font-bold text-primary">NPR 1,250</td>
-                    <td className="py-3.5 font-semibold">NPR 1,220</td>
-                    <td className="py-3.5 font-semibold">NPR 1,240</td>
-                    <td className="py-3.5 font-semibold">NPR 1,180</td>
-                    <td className="py-3.5 text-right pr-4 font-bold text-secondary text-xs">+2.4% ▲</td>
-                  </tr>
-                  <tr className="hover:bg-surface-container-low/60 transition-colors">
-                    <td className="py-3.5 pl-4 font-bold text-primary flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Orthodox High-Grown Tea
-                    </td>
-                    <td className="py-3.5 text-xs text-on-surface-variant">NPR / kg</td>
-                    <td className="py-3.5 font-bold text-primary">NPR 850</td>
-                    <td className="py-3.5 font-semibold">NPR 810</td>
-                    <td className="py-3.5 font-semibold">NPR 840</td>
-                    <td className="py-3.5 font-semibold">NPR 860</td>
-                    <td className="py-3.5 text-right pr-4 font-bold text-error text-xs">-0.8% ▼</td>
-                  </tr>
-                  <tr className="hover:bg-surface-container-low/60 transition-colors">
-                    <td className="py-3.5 pl-4 font-bold text-primary flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-600"></span> Organic Ginger (Aduwa)
-                    </td>
-                    <td className="py-3.5 text-xs text-on-surface-variant">NPR / kg</td>
-                    <td className="py-3.5 font-bold text-primary">NPR 160</td>
-                    <td className="py-3.5 font-semibold">NPR 145</td>
-                    <td className="py-3.5 font-semibold">NPR 155</td>
-                    <td className="py-3.5 font-semibold">NPR 170</td>
-                    <td className="py-3.5 text-right pr-4 font-bold text-secondary text-xs">+5.7% ▲</td>
-                  </tr>
+                  {marketPricesLoading && (
+                    <tr><td colSpan={9} className="py-8 text-center text-on-surface-variant">Loading live Kalimati prices…</td></tr>
+                  )}
+                  {!marketPricesLoading && !marketPrices.length && (
+                    <tr><td colSpan={9} className="py-8 text-center text-on-surface-variant">No daily Kalimati snapshot is available yet.</td></tr>
+                  )}
+                  {!marketPricesLoading && marketPrices.length > 0 && !filteredMarketPrices.length && (
+                    <tr><td colSpan={9} className="py-8 text-center text-on-surface-variant">No prices match “{marketPriceSearch}”.</td></tr>
+                  )}
+                  {filteredMarketPrices.map((item, index) => (
+                    <tr key={item.id} className="hover:bg-surface-container-low/60 transition-colors">
+                      <td className="py-3.5 pl-4 font-bold text-primary flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full ${index % 3 === 0 ? 'bg-secondary' : index % 3 === 1 ? 'bg-emerald-600' : 'bg-amber-600'}`}></span>
+                        {getMarketDisplayName(item)}
+                      </td>
+                      <td className="py-3.5 text-xs text-on-surface-variant">{item.unit}</td>
+                      <td className="py-3.5 font-semibold">NPR {item.minimum_price_npr.toLocaleString()}</td>
+                      <td className="py-3.5 font-bold text-primary">NPR {item.price_npr.toLocaleString()}</td>
+                      <td className="py-3.5 text-on-surface-variant">{item.previous_price_npr === null ? '—' : `NPR ${item.previous_price_npr.toLocaleString()}`}</td>
+                      <td className={`py-3.5 font-bold text-xs ${item.is_up === false ? 'text-error' : 'text-secondary'}`}>
+                        {item.change_percent === null ? 'New' : `${item.change_percent >= 0 ? '+' : ''}${item.change_percent.toFixed(1)}%`}
+                      </td>
+                      <td className="py-3.5 font-semibold">NPR {item.maximum_price_npr.toLocaleString()}</td>
+                      <td className="py-3.5 text-xs text-on-surface-variant">{item.market}</td>
+                      <td className="py-3.5 text-right pr-4 font-bold text-secondary text-xs">{item.price_date}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         </section>
@@ -582,23 +639,24 @@ function App() {
                 Calculate Your Direct Margin Boost
               </h2>
               <p className="text-xs md:text-sm text-on-surface-variant leading-relaxed">
-                Traditional commission brokers take up to 35% of harvest value. Calculate how much extra profit you keep using Anvaya's direct exchange.
+                Compare the live Kalimati average with the same day’s minimum published rate for the selected commodity.
               </p>
 
               {/* Crop Selector */}
               <div className="space-y-2 pt-2">
                 <label className="text-xs font-bold text-primary block">Select Produce Crop:</label>
                 <div className="flex flex-wrap gap-2">
-                  {(['Cardamom', 'Tea', 'Ginger', 'Apple', 'Potato'] as const).map((crop) => (
+                  {marketPrices.slice(0, 5).map((item) => (
                     <button
-                      key={crop}
-                      onClick={() => setRoiCrop(crop)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${roiCrop === crop ? 'bg-secondary text-on-secondary border-secondary shadow-xs' : 'bg-white text-on-surface border-outline-variant/40 hover:border-secondary'
+                      key={item.id}
+                      onClick={() => setRoiCrop(item.crop_name)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${roiCrop === item.crop_name ? 'bg-secondary text-on-secondary border-secondary shadow-xs' : 'bg-white text-on-surface border-outline-variant/40 hover:border-secondary'
                         }`}
                     >
-                      {crop}
+                      {getMarketDisplayName(item)}
                     </button>
                   ))}
+                  {!marketPrices.length && <span className="text-xs text-on-surface-variant">Live prices will appear after the first daily import.</span>}
                 </div>
               </div>
 
@@ -629,12 +687,12 @@ function App() {
             <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Traditional Broker Card */}
               <div className="p-6 rounded-3xl bg-white/80 border border-outline-variant/20 shadow-xs space-y-3">
-                <span className="text-xs font-bold text-outline uppercase tracking-wider">Traditional Broker Sale</span>
+                <span className="text-xs font-bold text-outline uppercase tracking-wider">Kalimati Minimum Reference</span>
                 <div className="space-y-1">
-                  <p className="text-xs text-on-surface-variant">Broker Rate: NPR {activePriceInfo.brokerPrice} / kg</p>
+                  <p className="text-xs text-on-surface-variant">Minimum rate: NPR {activePriceInfo.brokerPrice} / {activePriceInfo.unit}</p>
                   <h3 className="text-2xl font-bold text-outline">रु {brokerPayout.toLocaleString()}</h3>
                 </div>
-                <p className="text-[11px] text-error font-medium">Includes ~30% middleman commission fee deductions.</p>
+                <p className="text-[11px] text-error font-medium">Reference only; sourced from today’s Kalimati range.</p>
               </div>
 
               {/* Anvaya Direct Card */}
@@ -642,7 +700,7 @@ function App() {
                 <div className="absolute -right-4 -bottom-4 text-7xl font-extrabold text-white/5 select-none">+35%</div>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-on-secondary">Anvaya Direct Exchange</span>
                 <div className="space-y-1">
-                  <p className="text-xs text-on-primary/80">Direct Floor Price: NPR {activePriceInfo.price} / kg</p>
+                  <p className="text-xs text-on-primary/80">Live Kalimati average: NPR {activePriceInfo.price} / {activePriceInfo.unit}</p>
                   <h3 className="text-3xl font-bold text-white">रु {anvayaPayout.toLocaleString()}</h3>
                 </div>
                 <div className="pt-2 border-t border-white/20 flex items-center justify-between text-xs">
