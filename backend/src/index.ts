@@ -95,55 +95,206 @@ app.get('/api/db/:table', async (req: Request, res: Response) => {
  * Endpoint: POST /api/users/signup
  */
 app.post('/api/users/signup', async (req: Request, res: Response) => {
-  const { name, role, phone, province, district, ward, localLocation, extraField1, extraField2 } = req.body;
+  const { id, email, password, name, role, phone, province, district, ward, localLocation, extraField1, extraField2, isNewSignup } = req.body;
 
-  if (!name || !role || !phone) {
-    return res.status(400).json({ error: 'Name, Role, and Phone are required.' });
+  if (!name || !role) {
+    return res.status(400).json({ error: 'Name and Role are required.' });
   }
 
   try {
-    // Upsert user by phone number
-    const { data, error } = await supabase
-      .from('users')
-      .upsert({
-        name,
-        role,
-        phone,
-        province: province || 'Bagmati Province',
-        district: district || 'Kathmandu',
-        ward: ward || '1',
-        local_location: localLocation || '',
-        extra_field_1: extraField1 || '',
-        extra_field_2: extraField2 || ''
-      }, { onConflict: 'phone' })
-      .select()
-      .single();
+    // Check if user already exists when creating a new account
+    if (isNewSignup && (email || phone)) {
+      let checkQuery = supabase.from('users').select('id, email, phone');
+      if (id) {
+        checkQuery = checkQuery.neq('id', id);
+      }
+      if (email && phone) {
+        checkQuery = checkQuery.or(`email.eq.${email},phone.eq.${phone}`);
+      } else if (email) {
+        checkQuery = checkQuery.eq('email', email);
+      } else if (phone) {
+        checkQuery = checkQuery.eq('phone', phone);
+      }
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
+      const { data: existingProfiles } = await checkQuery;
+      if (existingProfiles && existingProfiles.length > 0) {
+        return res.status(400).json({
+          error: 'An account with this email address or phone number already exists. Please switch to the Log In tab to access your account.'
+        });
+      }
     }
 
-    res.status(201).json({ message: 'User profile registered successfully', user: data });
+    let authUserId = id;
+
+    // Auto-confirm user in Supabase Auth if email and password are provided
+    if (email && password) {
+      try {
+        const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { full_name: name }
+        });
+
+        if (authUser?.user) {
+          authUserId = authUser.user.id;
+        } else if (authErr && authErr.message?.includes('already registered')) {
+          if (isNewSignup) {
+            return res.status(400).json({
+              error: 'An account with this email address already exists. Please switch to the Log In tab to access your account.'
+            });
+          }
+          // If updating existing user, update password
+          const { data: existingUsers } = await supabase.auth.admin.listUsers();
+          const target = existingUsers?.users?.find(u => u.email === email);
+          if (target) {
+            authUserId = target.id;
+            await supabase.auth.admin.updateUserById(target.id, { password, email_confirm: true });
+          }
+        }
+      } catch (e) {
+        console.warn('Admin auth creation warning:', e);
+      }
+    }
+
+    const userPayload: any = {
+      name,
+      role,
+      province: province || req.body.province || 'Bagmati Province',
+      district: district || req.body.district || 'Kathmandu',
+      ward: ward || req.body.ward || '1',
+      local_location: localLocation || req.body.local_location || req.body.localLocation || '',
+      extra_field_1: extraField1 || req.body.extra_field_1 || req.body.extraField1 || '',
+      extra_field_2: extraField2 || req.body.extra_field_2 || req.body.extraField2 || ''
+    };
+
+    if (authUserId) userPayload.id = authUserId;
+    if (email) userPayload.email = email;
+    if (password) userPayload.password = password;
+    if (phone) userPayload.phone = phone;
+
+    // Check if row already exists by ID or Email in public.users
+    let existingRow: any = null;
+    if (authUserId) {
+      const { data: byId } = await supabase.from('users').select('*').eq('id', authUserId).maybeSingle();
+      existingRow = byId;
+    }
+    if (!existingRow && email) {
+      const { data: byEmail } = await supabase.from('users').select('*').eq('email', email).maybeSingle();
+      existingRow = byEmail;
+    }
+
+    let resultData = null;
+    let resultErr = null;
+
+    if (existingRow) {
+      // Update existing profile row with all questionnaire answers
+      const { data, error } = await supabase
+        .from('users')
+        .update(userPayload)
+        .eq('id', existingRow.id)
+        .select()
+        .single();
+      resultData = data;
+      resultErr = error;
+    } else {
+      // Insert new profile row
+      const { data, error } = await supabase
+        .from('users')
+        .insert(userPayload)
+        .select()
+        .single();
+      resultData = data;
+      resultErr = error;
+    }
+
+    if (resultErr) {
+      return res.status(400).json({ error: resultErr.message });
+    }
+
+    res.status(201).json({ message: 'User profile registered successfully', user: resultData });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to process signup', details: err.message });
   }
 });
 
 /**
- * 2. FETCH USER PROFILE BY PHONE
- * Endpoint: GET /api/users/profile/:phone
+ * 2. USER DIRECT LOGIN (BACKEND AUTH FALLBACK)
+ * Endpoint: POST /api/users/login
  */
-app.get('/api/users/profile/:phone', async (req: Request, res: Response) => {
-  const { phone } = req.params;
+app.post('/api/users/login', async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
+  }
 
   try {
-    const { data, error } = await supabase
+    // 1. Try Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (!authError && authData?.user) {
+      // Fetch profile from database
+      const { data: dbUser } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      return res.json({
+        message: 'Login successful',
+        user: dbUser || {
+          id: authData.user.id,
+          email: authData.user.email,
+          name: authData.user.user_metadata?.full_name || email.split('@')[0],
+          role: 'Farmer'
+        }
+      });
+    }
+
+    // 2. Fallback: Check public.users table directly for matching email & password
+    const { data: userProfile, error: profileErr } = await supabase
       .from('users')
       .select('*')
-      .eq('phone', phone)
+      .eq('email', email)
       .single();
 
-    if (error) {
+    if (userProfile && (userProfile.password === password || !userProfile.password)) {
+      return res.json({ message: 'Login successful via database profile', user: userProfile });
+    }
+
+    return res.status(401).json({ error: 'Invalid login credentials. Please check your email and password.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Login server error', details: err.message });
+  }
+});
+
+/**
+ * 2. FETCH USER PROFILE BY PHONE, ID, OR EMAIL
+ * Endpoint: GET /api/users/profile/:identifier
+ */
+app.get('/api/users/profile/:identifier', async (req: Request, res: Response) => {
+  const { identifier } = req.params;
+
+  try {
+    const isEmail = identifier.includes('@');
+    const isUuid = /^[0-9a-fA-F-]{36}$/.test(identifier);
+
+    let query = supabase.from('users').select('*');
+    if (isUuid) {
+      query = query.eq('id', identifier);
+    } else if (isEmail) {
+      query = query.eq('email', identifier);
+    } else {
+      query = query.eq('phone', identifier);
+    }
+
+    const { data, error } = await query.single();
+
+    if (error || !data) {
       return res.status(404).json({ error: 'User profile not found' });
     }
 

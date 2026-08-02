@@ -2,11 +2,43 @@ import { useEffect, useState } from 'react'
 import SignUp, { type UserProfile } from './components/SignUp'
 import Dashboard from './components/Dashboard'
 import { supabase } from './supabaseClient'
+import { fetchUserProfile, registerUserInSupabase } from './api'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'signup' | 'farmer-dashboard'>('landing');
-  const [farmerName, setFarmerName] = useState('Farmer');
-  const [userProfile, setUserProfile] = useState<UserProfile | undefined>(undefined);
+  const [userProfile, setUserProfile] = useState<UserProfile | undefined>(() => {
+    try {
+      const saved = localStorage.getItem('anvaya_user_profile');
+      return saved ? JSON.parse(saved) : undefined;
+    } catch {
+      return undefined;
+    }
+  });
+
+  const [farmerName, setFarmerName] = useState(() => {
+    try {
+      const saved = localStorage.getItem('anvaya_user_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.name) return parsed.name;
+      }
+    } catch {}
+    return 'Farmer';
+  });
+
+  const [currentPage, setCurrentPage] = useState<'landing' | 'signup' | 'farmer-dashboard'>(() => {
+    if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('error='))) {
+      return 'signup';
+    }
+    const saved = localStorage.getItem('anvaya_user_profile');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.phone && parsed.district) return 'farmer-dashboard';
+      } catch {}
+    }
+    return 'landing';
+  });
+
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     { sender: 'ai', text: 'Namaste! I am the Anvaya Agricultural Assistant. I can forecast weather trends, monitor soil analytics, or estimate floor prices. Select a topic below to test:' }
@@ -17,34 +49,137 @@ function App() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [lang, setLang] = useState<'en' | 'ne'>('en');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [authErrorNotice, setAuthErrorNotice] = useState<string | null>(null);
+
+  const handleAuthUserSession = async (user: any) => {
+    try {
+      const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+      const email = user.email || '';
+
+      // Check if local saved profile is already complete
+      const cachedProfileStr = localStorage.getItem('anvaya_user_profile');
+      if (cachedProfileStr) {
+        try {
+          const cached = JSON.parse(cachedProfileStr);
+          if (cached.phone && cached.district && cached.email === email) {
+            setUserProfile(cached);
+            setFarmerName(cached.name || profileName);
+            setCurrentPage('farmer-dashboard');
+            return;
+          }
+        } catch {}
+      }
+
+      // Check if there is a pending questionnaire profile from Google signup
+      const savedPending = localStorage.getItem('pending_google_signup_profile');
+      if (savedPending) {
+        try {
+          const pending = JSON.parse(savedPending);
+          localStorage.removeItem('pending_google_signup_profile');
+
+          const completeProfile: UserProfile = {
+            name: pending.name || profileName,
+            role: pending.role || 'Farmer',
+            phone: pending.phone || '',
+            email: email,
+            province: pending.province,
+            district: pending.district,
+            ward: pending.ward,
+            localLocation: pending.localLocation,
+            extraField1: pending.extraField1,
+            extraField2: pending.extraField2,
+          };
+
+          // Register in database
+          await registerUserInSupabase({
+            id: user.id,
+            email: email,
+            name: completeProfile.name,
+            role: completeProfile.role,
+            phone: completeProfile.phone || '',
+            province: completeProfile.province,
+            district: completeProfile.district,
+            ward: completeProfile.ward,
+            localLocation: completeProfile.localLocation,
+            extraField1: completeProfile.extraField1,
+            extraField2: completeProfile.extraField2,
+            isNewSignup: true,
+          });
+
+          setFarmerName(completeProfile.name);
+          setUserProfile(completeProfile);
+          localStorage.setItem('anvaya_user_profile', JSON.stringify(completeProfile));
+          setCurrentPage('farmer-dashboard');
+          return;
+        } catch (e) {
+          console.warn('Error saving pending profile:', e);
+        }
+      }
+
+      // Check if user profile exists in database
+      const existingDbProfile = await fetchUserProfile(email || user.id);
+
+      // If account was originally created using Email & Password, block Google OAuth login for this email
+      if (existingDbProfile && existingDbProfile.password && user.app_metadata?.provider === 'google') {
+        await supabase.auth.signOut();
+        localStorage.removeItem('anvaya_user_profile');
+        setAuthErrorNotice(`This email (${email}) was registered using Email and Password. Please log in using your Email and Password.`);
+        setCurrentPage('signup');
+        return;
+      }
+
+      if (existingDbProfile && existingDbProfile.phone && existingDbProfile.district) {
+        const profile: UserProfile = {
+          name: existingDbProfile.name || profileName,
+          email: existingDbProfile.email || email,
+          phone: existingDbProfile.phone,
+          role: existingDbProfile.role || 'Farmer',
+          province: existingDbProfile.province,
+          district: existingDbProfile.district,
+          ward: existingDbProfile.ward,
+          localLocation: existingDbProfile.local_location,
+          extraField1: existingDbProfile.extra_field_1,
+          extraField2: existingDbProfile.extra_field_2,
+        };
+        setFarmerName(profile.name);
+        setUserProfile(profile);
+        localStorage.setItem('anvaya_user_profile', JSON.stringify(profile));
+        setCurrentPage('farmer-dashboard');
+      } else {
+        // Incomplete profile (New Google User): Prompt user to complete registration details
+        const partialProfile: UserProfile = {
+          name: profileName,
+          email: email,
+          role: 'Farmer',
+        };
+        setUserProfile(partialProfile);
+        setAuthErrorNotice(`No registered account found for (${email}). Please complete the Sign Up questionnaire to create your profile.`);
+        setCurrentPage('signup');
+      }
+    } catch (e) {
+      console.warn('Session check error:', e);
+      setCurrentPage('signup');
+    }
+  };
 
   // Listen for Supabase OAuth & Email session changes (e.g. Google Login redirect)
   useEffect(() => {
+    if (window.location.hash.includes('error=')) {
+      const params = new URLSearchParams(window.location.hash.substring(1));
+      const errorDesc = params.get('error_description') || params.get('error') || 'OAuth authentication failed.';
+      setAuthErrorNotice(decodeURIComponent(errorDesc.replace(/\+/g, ' ')));
+      setCurrentPage('signup');
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        const user = session.user;
-        const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Farmer';
-        setFarmerName(profileName);
-        setUserProfile({
-          name: profileName,
-          email: user.email,
-          role: 'Farmer',
-        });
-        setCurrentPage('farmer-dashboard');
+        handleAuthUserSession(session.user);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        const user = session.user;
-        const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Farmer';
-        setFarmerName(profileName);
-        setUserProfile({
-          name: profileName,
-          email: user.email,
-          role: 'Farmer',
-        });
-        setCurrentPage('farmer-dashboard');
+        handleAuthUserSession(session.user);
       }
     });
 
@@ -113,18 +248,35 @@ function App() {
   const tickerList = [...cropTickerItems, ...cropTickerItems];
 
   if (currentPage === 'farmer-dashboard') {
-    return <Dashboard farmerName={farmerName} userProfile={userProfile} onNavigateBack={() => setCurrentPage('landing')} />;
+    return (
+      <Dashboard
+        farmerName={farmerName}
+        userProfile={userProfile}
+        onNavigateBack={() => {
+          localStorage.removeItem('anvaya_user_profile');
+          supabase.auth.signOut();
+          setCurrentPage('landing');
+        }}
+      />
+    );
   }
 
   if (currentPage === 'signup') {
-    return <SignUp
-      onNavigateBack={() => setCurrentPage('landing')}
-      onNavigateToDashboard={(profile) => {
-        setUserProfile(profile);
-        setFarmerName(profile.name || 'Farmer');
-        setCurrentPage('farmer-dashboard');
-      }}
-    />;
+    const isOAuthReturn = typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('error='));
+    return (
+      <SignUp
+        initialProfile={userProfile}
+        authErrorNotice={authErrorNotice}
+        initialMode={isOAuthReturn ? 'login' : undefined}
+        onNavigateBack={() => setCurrentPage('landing')}
+        onNavigateToDashboard={(profile) => {
+          setUserProfile(profile);
+          setFarmerName(profile.name || 'Farmer');
+          localStorage.setItem('anvaya_user_profile', JSON.stringify(profile));
+          setCurrentPage('farmer-dashboard');
+        }}
+      />
+    );
   }
 
   const toggleLang = () => {

@@ -10,6 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT UNIQUE,
+    password TEXT,
     name TEXT NOT NULL,
     role TEXT DEFAULT 'Farmer' CHECK (role IN ('Farmer', 'Retailer', 'Cooperative', 'Transport Provider')),
     phone TEXT,
@@ -23,6 +24,12 @@ CREATE TABLE IF NOT EXISTS public.users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Ensure columns exist and phone is nullable (Google OAuth does not provide phone number)
+ALTER TABLE public.users ALTER COLUMN phone DROP NOT NULL;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS password TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
 -- 2. AUTOMATIC PROFILE CREATION TRIGGER FOR GOOGLE & EMAIL OAUTH SIGNUPS
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -31,7 +38,7 @@ BEGIN
   VALUES (
     new.id,
     new.email,
-    COALESCE(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    COALESCE(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email, '@', 1), 'User'),
     new.raw_user_meta_data->>'avatar_url',
     'Farmer'
   )
@@ -39,6 +46,9 @@ BEGIN
   SET email = EXCLUDED.email,
       name = EXCLUDED.name,
       avatar_url = EXCLUDED.avatar_url;
+  RETURN new;
+EXCEPTION WHEN OTHERS THEN
+  -- Prevents Supabase Auth from throwing "Database error saving new user"
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

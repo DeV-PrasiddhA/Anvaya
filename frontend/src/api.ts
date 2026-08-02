@@ -5,6 +5,9 @@
 const API_BASE_URL = 'http://localhost:5001/api';
 
 export interface UserSignupPayload {
+  id?: string;
+  email?: string;
+  password?: string;
   name: string;
   role: 'Farmer' | 'Retailer' | 'Cooperative' | 'Transport Provider';
   phone: string;
@@ -14,6 +17,7 @@ export interface UserSignupPayload {
   localLocation?: string;
   extraField1?: string;
   extraField2?: string;
+  isNewSignup?: boolean;
 }
 
 export interface CreateProductPayload {
@@ -48,6 +52,39 @@ export async function registerUserInSupabase(payload: UserSignupPayload) {
     return data;
   } catch (err) {
     console.warn('API call to register user failed:', err);
+    return null;
+  }
+}
+
+/**
+ * Log in user via Supabase / backend authentication fallback
+ */
+export async function loginUserInSupabase(email: string, password?: string) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/users/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.warn('API call to login user failed:', err);
+    return null;
+  }
+}
+
+/**
+ * Fetch user profile from Supabase by phone, email, or ID
+ */
+export async function fetchUserProfile(identifier: string) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/users/profile/${encodeURIComponent(identifier)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.warn('API call to fetch profile failed:', err);
     return null;
   }
 }
