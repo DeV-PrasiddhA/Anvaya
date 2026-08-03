@@ -48,7 +48,6 @@ function App() {
   const [roiCrop, setRoiCrop] = useState('');
   const [roiQty, setRoiQty] = useState<number>(500);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [lang, setLang] = useState<'en' | 'ne'>('en');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [authErrorNotice, setAuthErrorNotice] = useState<string | null>(null);
   const [marketPrices, setMarketPrices] = useState<MarketPrice[]>([]);
@@ -273,9 +272,7 @@ function App() {
   }));
 
   // Duplicate items for seamless continuous loop
-  const getMarketDisplayName = (item: MarketPrice) => (
-    lang === 'ne' ? item.crop_name_ne : item.crop_name
-  );
+  const getMarketDisplayName = (item: MarketPrice) => item.crop_name;
 
   const tickerList = [...cropTickerItems, ...cropTickerItems];
   const filteredMarketPrices = marketPrices.filter((item) => {
@@ -317,26 +314,15 @@ function App() {
     );
   }
 
-  const toggleLang = () => {
-    setLang(prev => prev === 'en' ? 'ne' : 'en');
-  };
-
   const handleVoiceInput = () => {
     setIsVoiceActive(true);
     setTimeout(() => {
       setIsVoiceActive(false);
-      const voiceQuery = lang === 'ne'
-        ? 'झापा बजारमा अलैंचीको मूल्य कति छ?'
-        : 'What is the Cardamom floor price in Jhapa Market?';
+      const voiceQuery = 'What is the Cardamom floor price in Jhapa Market?';
       const firstPrice = marketPrices[0];
-      const voiceReply = lang === 'ne'
-        ? firstPrice
-          ? `🎙️ आवाज विश्लेषण: ${firstPrice.crop_name_ne} को औसत मूल्य रु ${firstPrice.price_npr.toLocaleString()} प्रति ${firstPrice.unit} छ।`
-          : '🎙️ आवाज विश्लेषण: आजको कालीमाटी मूल्य उपलब्ध छैन।'
-        : firstPrice
-          ? `🎙️ Voice Analysis: ${firstPrice.crop_name} averages NPR ${firstPrice.price_npr.toLocaleString()}/${firstPrice.unit} at Kalimati.`
-          : '🎙️ Voice Analysis: today’s Kalimati prices are not available yet.';
-
+      const voiceReply = firstPrice
+        ? `🎙️ Voice Analysis: ${firstPrice.crop_name} averages NPR ${firstPrice.price_npr.toLocaleString()}/${firstPrice.unit} at Kalimati.`
+        : '🎙️ Voice Analysis: Kalimati prices are not available yet.';
       setChatMessages(prev => [
         ...prev,
         { sender: 'user', text: voiceQuery },
@@ -360,26 +346,16 @@ function App() {
           }}
         />
         <nav className="hidden md:flex gap-6">
-          <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 no-underline" href="#features">{lang === 'ne' ? 'विशेषताहरू' : 'Features'}</a>
-          <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 no-underline" href="#how-it-works">{lang === 'ne' ? 'प्रक्रिया' : 'How it Works'}</a>
-          <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 no-underline" href="#testimonials">{lang === 'ne' ? 'प्रतिक्रिया' : 'Testimonials'}</a>
+          <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 no-underline" href="#features">Features</a>
+          <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 no-underline" href="#how-it-works">How it Works</a>
+          <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 no-underline" href="#testimonials">Testimonials</a>
         </nav>
         <div className="flex items-center gap-3">
-          {/* Language Switcher */}
-          <button
-            onClick={toggleLang}
-            className="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-secondary-container text-primary font-bold text-xs border border-outline-variant/40 cursor-pointer flex items-center gap-1.5 transition-all"
-            title="Toggle Nepali / English"
-          >
-            <span className="material-symbols-outlined text-base">translate</span>
-            <span>{lang === 'en' ? 'नेपाली' : 'English'}</span>
-          </button>
-
           <button
             onClick={() => setCurrentPage('signup')}
             className="bg-primary text-on-primary px-5 py-2.5 rounded-xl font-label-caps text-label-caps hover:bg-primary-container transition-all hover:scale-105 active:scale-95 shadow-sm cursor-pointer border-none"
           >
-            {lang === 'ne' ? 'शुरु गर्नुहोस्' : 'Get Started'}
+            Get Started
           </button>
         </div>
       </header>
@@ -394,7 +370,7 @@ function App() {
           {!marketPricesLoading && !tickerList.length && <span className="px-4 text-xs text-on-surface-variant">No Kalimati prices imported yet.</span>}
           {tickerList.map((item, index) => (
             <div key={index} className="flex items-center gap-2 px-4 border-r border-outline-variant/30">
-              <span className="font-semibold text-primary">{lang === 'ne' ? marketPrices[index % Math.max(marketPrices.length, 1)]?.crop_name_ne || item.name : item.name}</span>
+              <span className="font-semibold text-primary">{item.name}</span>
               <span className="text-on-surface-variant">{item.price}</span>
               <span className="text-xs font-bold text-on-surface-variant">
                 {item.change}
@@ -453,7 +429,7 @@ function App() {
                     <span className="material-symbols-outlined text-xl">agriculture</span>
                   </div>
                   <h3 className="font-extrabold text-slate-900 text-sm mt-3">Farmer</h3>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">List harvest yields &amp; get direct floor prices</p>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">List harvest yields & get direct floor prices</p>
                 </div>
                 <div className="mt-3.5 pt-2.5 border-t border-slate-100 w-full flex items-center justify-center gap-1 text-xs font-bold text-emerald-700 group-hover:text-emerald-800">
                   <span>Get Started</span>
@@ -492,7 +468,7 @@ function App() {
                     <span className="material-symbols-outlined text-xl">groups</span>
                   </div>
                   <h3 className="font-extrabold text-slate-900 text-sm mt-3">Cooperative</h3>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">Aggregate member harvest pools &amp; auctions</p>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">Aggregate member harvest pools & auctions</p>
                 </div>
                 <div className="mt-3.5 pt-2.5 border-t border-slate-100 w-full flex items-center justify-center gap-1 text-xs font-bold text-amber-700 group-hover:text-amber-800">
                   <span>Preview Teaser</span>
@@ -510,7 +486,7 @@ function App() {
                     <span className="material-symbols-outlined text-xl">local_shipping</span>
                   </div>
                   <h3 className="font-extrabold text-slate-900 text-sm mt-3">Transport</h3>
-                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">Accept highway cargo loads &amp; live GPS</p>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">Accept highway cargo loads & live GPS</p>
                 </div>
                 <div className="mt-3.5 pt-2.5 border-t border-slate-100 w-full flex items-center justify-center gap-1 text-xs font-bold text-emerald-700 group-hover:text-emerald-800">
                   <span>Load Board</span>
@@ -536,7 +512,7 @@ function App() {
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>storefront</span>
               </div>
               <h2 className="text-2xl font-bold text-primary mt-1">5,000+</h2>
-              <p className="text-xs text-on-surface-variant text-center font-semibold">Bulk Retailers &amp; Buyers</p>
+              <p className="text-xs text-on-surface-variant text-center font-semibold">Bulk Retailers & Buyers</p>
             </div>
             <div className="flex flex-col items-center gap-2 p-6 rounded-2xl bg-white/90 border border-outline-variant/15 shadow-xs hover:-translate-y-1 transition-all duration-300">
               <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary">
@@ -550,7 +526,7 @@ function App() {
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
               </div>
               <h2 className="text-2xl font-bold text-primary mt-1">24/7 AI Advisor</h2>
-              <p className="text-xs text-on-surface-variant text-center font-semibold">Predictive Price &amp; Soil Insights</p>
+              <p className="text-xs text-on-surface-variant text-center font-semibold">Predictive Price & Soil Insights</p>
             </div>
           </div>
         </section>
@@ -570,7 +546,7 @@ function App() {
                 type="search"
                 value={marketPriceSearch}
                 onChange={(event) => setMarketPriceSearch(event.target.value)}
-                placeholder={lang === 'ne' ? 'वस्तु वा बजार खोज्नुहोस्' : 'Search commodity or market'}
+                placeholder="Search commodity or market"
                 className="w-full rounded-xl border border-outline-variant/40 bg-white px-10 py-3 text-xs text-primary outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
               />
             </label>
@@ -760,8 +736,8 @@ function App() {
               <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary mb-2">
                 <span className="material-symbols-outlined text-2xl">star</span>
               </div>
-              <h3 className="font-bold text-primary text-lg">Supplier Rating &amp; Payment</h3>
-              <p className="text-xs text-on-surface-variant leading-relaxed">Rapid payment settlement plus buyer rating &amp; review feedback to reward honest suppliers.</p>
+              <h3 className="font-bold text-primary text-lg">Supplier Rating & Payment</h3>
+              <p className="text-xs text-on-surface-variant leading-relaxed">Rapid payment settlement plus buyer rating & review feedback to reward honest suppliers.</p>
             </div>
           </div>
         </section>
@@ -791,7 +767,7 @@ function App() {
               <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary">
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>navigation</span>
               </div>
-              <h3 className="font-bold text-primary text-xl">Live GPS Freight &amp; Route Tracking</h3>
+              <h3 className="font-bold text-primary text-xl">Live GPS Freight & Route Tracking</h3>
               <p className="text-xs text-on-surface-variant leading-relaxed">
                 Connect with transportation providers, track trucks live on interactive highway maps, monitor temperature cold-chains, and receive digital proof of delivery.
               </p>
@@ -801,7 +777,7 @@ function App() {
               <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary">
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
               </div>
-              <h3 className="font-bold text-primary text-xl">AI Price Forecasting &amp; Weather Agronomist</h3>
+              <h3 className="font-bold text-primary text-xl">AI Price Forecasting & Weather Agronomist</h3>
               <p className="text-xs text-on-surface-variant leading-relaxed">
                 Machine learning models forecast crop floor prices, soil moisture, and climatic shifts. Ask our 24/7 AI chatbot for instant crop health tips.
               </p>
@@ -837,7 +813,7 @@ function App() {
                   <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary font-bold">RT</div>
                   <div>
                     <h4 className="font-bold text-primary text-sm">Ram Bahadur Tamang</h4>
-                    <p className="text-xs text-on-surface-variant">Cardamom &amp; Apple Grower, Mustang</p>
+                    <p className="text-xs text-on-surface-variant">Cardamom & Apple Grower, Mustang</p>
                   </div>
                 </div>
               </div>
@@ -952,7 +928,7 @@ function App() {
                   }`}
               >
                 <span className="material-symbols-outlined text-base">mic</span>
-                <span>{isVoiceActive ? (lang === 'ne' ? 'सुनिरहेको छ...' : 'Listening to Voice Query...') : (lang === 'ne' ? '🎤 बोलि मार्फत सोध्नुहोस्' : '🎤 Speak Voice Inquiry')}</span>
+                <span>{isVoiceActive ? 'Listening to Voice Query...' : '🎤 Speak Voice Inquiry'}</span>
               </button>
 
               <div className="flex flex-wrap gap-1.5 justify-center">
@@ -961,21 +937,21 @@ function App() {
                   className="px-2 py-1 rounded-lg bg-surface-container-highest hover:bg-secondary-container hover:text-on-secondary-container transition-all text-[10px] font-semibold text-primary cursor-pointer flex items-center gap-1 border-none"
                 >
                   <span className="material-symbols-outlined text-xs text-secondary">partly_cloudy_day</span>
-                  <span>{lang === 'ne' ? 'मौसम पूर्वानुमान' : 'Weather Forecast'}</span>
+                  <span>Weather Forecast</span>
                 </button>
                 <button
                   onClick={() => handleAiSelect('prices')}
                   className="px-2 py-1 rounded-lg bg-surface-container-highest hover:bg-secondary-container hover:text-on-secondary-container transition-all text-[10px] font-semibold text-primary cursor-pointer flex items-center gap-1 border-none"
                 >
                   <span className="material-symbols-outlined text-xs text-secondary">trending_up</span>
-                  <span>{lang === 'ne' ? 'अलैंचीको मूल्य' : 'Cardamom Prices'}</span>
+                  <span>Cardamom Prices</span>
                 </button>
                 <button
                   onClick={() => handleAiSelect('soil')}
                   className="px-2 py-1 rounded-lg bg-surface-container-highest hover:bg-secondary-container hover:text-on-secondary-container transition-all text-[10px] font-semibold text-primary cursor-pointer flex items-center gap-1 border-none"
                 >
                   <span className="material-symbols-outlined text-xs text-secondary">eco</span>
-                  <span>{lang === 'ne' ? 'माटोको गुणस्तर' : 'Soil Tips'}</span>
+                  <span>Soil Tips</span>
                 </button>
               </div>
             </div>
