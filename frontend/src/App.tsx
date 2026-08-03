@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import SignUp, { type UserProfile } from './components/SignUp'
 import Dashboard from './components/Dashboard'
+import BrandLogo from './components/BrandLogo'
 import { supabase } from './supabaseClient'
 import { fetchMarketPricesFromSupabase, fetchUserProfile, registerUserInSupabase, type MarketPrice } from './api'
 
@@ -349,18 +350,15 @@ function App() {
     <div className="bg-background text-on-surface font-body-sm min-h-screen overflow-x-hidden selection:bg-secondary-container selection:text-on-secondary-container">
       {/* Top Navigation */}
       <header className="fixed top-0 w-full z-50 glass-panel border-b border-white/10 px-4 md:px-12 h-16 flex items-center justify-between">
-        <div
+        <BrandLogo
+          size="md"
           onClick={() => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             if (window.location.hash) {
               history.pushState('', document.title, window.location.pathname);
             }
           }}
-          className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2 cursor-pointer select-none"
-        >
-          <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: '"FILL" 1' }}>grass</span>
-          <span className="tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Anvaya</span>
-        </div>
+        />
         <nav className="hidden md:flex gap-6">
           <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 no-underline" href="#features">{lang === 'ne' ? 'विशेषताहरू' : 'Features'}</a>
           <a className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 no-underline" href="#how-it-works">{lang === 'ne' ? 'प्रक्रिया' : 'How it Works'}</a>
@@ -879,9 +877,8 @@ function App() {
       <footer className="bg-surface-container-high py-8 px-4 md:px-12 border-t border-outline-variant/20">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-8">
           <div className="flex flex-col gap-2">
-            <div className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: '"FILL" 1' }}>grass</span>
-              Anvaya
+            <div className="flex items-center">
+              <BrandLogo size="md" />
             </div>
             <p className="text-sm text-on-surface-variant max-w-[20rem] leading-relaxed block whitespace-normal">
               Premium Agricultural Hub empowering rural farmers and connecting national markets across Nepal.
