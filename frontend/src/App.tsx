@@ -272,11 +272,7 @@ function App() {
 
   // Duplicate items for seamless continuous loop
   const getMarketDisplayName = (item: MarketPrice) => (
-<<<<<<< Updated upstream
-    lang === 'ne' ? item.crop_name_ne : item.crop_name
-=======
-    showNepaliMarketNames ? item.crop_name_ne || item.crop_name : item.crop_name
->>>>>>> Stashed changes
+    showNepaliMarketNames || lang === 'ne' ? item.crop_name_ne || item.crop_name : item.crop_name
   );
 
   const tickerList = [...cropTickerItems, ...cropTickerItems];
@@ -602,19 +598,6 @@ function App() {
               <h2 className="text-2xl md:text-4xl font-bold text-primary mt-2 mb-3">Location-Wise Market Price Comparison</h2>
               <p className="text-sm text-on-surface-variant">Compare live wholesale produce floor prices across major Nepalese agricultural hubs.</p>
             </div>
-<<<<<<< Updated upstream
-            <label className="relative w-full lg:w-80 shrink-0">
-              <span className="sr-only">Search market prices</span>
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-on-surface-variant">search</span>
-              <input
-                type="search"
-                value={marketPriceSearch}
-                onChange={(event) => setMarketPriceSearch(event.target.value)}
-                placeholder={lang === 'ne' ? 'वस्तु वा बजार खोज्नुहोस्' : 'Search commodity or market'}
-                className="w-full rounded-xl border border-outline-variant/40 bg-white px-10 py-3 text-xs text-primary outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-              />
-            </label>
-=======
             <div className="flex w-full lg:w-auto shrink-0 flex-col sm:flex-row gap-2">
               <button
                 type="button"
@@ -634,12 +617,11 @@ function App() {
                   type="search"
                   value={marketPriceSearch}
                   onChange={(event) => setMarketPriceSearch(event.target.value)}
-                  placeholder="Search commodity or market"
+                  placeholder={lang === 'ne' ? 'वस्तु वा बजार खोज्नुहोस्' : 'Search commodity or market'}
                   className="w-full rounded-xl border border-outline-variant/40 bg-white px-10 py-3 text-xs text-primary outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                 />
               </label>
             </div>
->>>>>>> Stashed changes
           </div>
 
           <div className="bg-white/90 glass-panel rounded-3xl p-6 border border-white/60 shadow-md overflow-hidden">
