@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { UserProfile } from './SignUp';
+import BrandLogo from './BrandLogo';
 
 interface TransportDashboardProps {
   userProfile?: UserProfile;
@@ -43,10 +44,7 @@ export default function TransportDashboard({ userProfile, onNavigateBack }: Tran
       {/* Top Header */}
       <header className="fixed top-0 inset-x-0 z-40 h-16 bg-surface/85 backdrop-blur-xl border-b border-outline-variant/20 px-4 md:px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
-            <span className="material-symbols-outlined text-secondary">grass</span>
-            <span className="tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Anvaya</span>
-          </div>
+          <BrandLogo size="md" onClick={onNavigateBack} />
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-800 border border-blue-500/30 ml-2">
             <span className="material-symbols-outlined text-sm">local_shipping</span>
             <span>Transport Provider Hub</span>

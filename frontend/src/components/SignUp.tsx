@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { registerUserInSupabase, loginUserInSupabase } from '../api';
 import { signInWithEmail, signInWithGoogle } from '../supabaseClient';
+import BrandLogo from './BrandLogo';
 
 export interface UserProfile {
   name: string;
@@ -350,22 +351,19 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
       
       {/* 1. Header Navigation Bar (Identical to Landing Page) */}
       <header className="fixed top-0 w-full z-50 glass-panel border-b border-white/20 px-4 md:px-12 h-16 flex items-center justify-between">
-        <div
+        <BrandLogo
+          size="md"
           onClick={onNavigateBack}
-          className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2 cursor-pointer select-none"
-        >
-          <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: '"FILL" 1' }}>grass</span>
-          <span className="tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Anvaya</span>
-        </div>
+        />
         <nav className="hidden md:flex gap-6">
-          <button onClick={onNavigateBack} className="text-sm font-medium text-slate-600 hover:text-emerald-800 transition-colors border-none bg-transparent cursor-pointer">Features</button>
-          <button onClick={onNavigateBack} className="text-sm font-medium text-slate-600 hover:text-emerald-800 transition-colors border-none bg-transparent cursor-pointer">How it Works</button>
-          <button onClick={onNavigateBack} className="text-sm font-medium text-slate-600 hover:text-emerald-800 transition-colors border-none bg-transparent cursor-pointer">Testimonials</button>
+          <button onClick={onNavigateBack} className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 border-none bg-transparent cursor-pointer">Features</button>
+          <button onClick={onNavigateBack} className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 border-none bg-transparent cursor-pointer">How it Works</button>
+          <button onClick={onNavigateBack} className="font-body-lg text-body-lg text-on-surface-variant hover:text-primary transition-colors duration-200 border-none bg-transparent cursor-pointer">Testimonials</button>
         </nav>
         <div className="flex items-center gap-3">
           <button
             onClick={onNavigateBack}
-            className="bg-primary text-on-primary px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary-container transition-all cursor-pointer border-none shadow-sm"
+            className="bg-primary text-on-primary px-5 py-2.5 rounded-xl font-label-caps text-label-caps hover:bg-primary-container transition-all hover:scale-105 active:scale-95 shadow-sm cursor-pointer border-none"
           >
             Home
           </button>

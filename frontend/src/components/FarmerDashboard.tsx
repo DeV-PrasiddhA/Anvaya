@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import CreateListing from './CreateListing';
 import type { UserProfile } from './SignUp';
+import BrandLogo from './BrandLogo';
 
 interface FarmerDashboardProps {
   farmerName?: string;
@@ -159,10 +160,7 @@ export default function FarmerDashboard({ farmerName = 'Farmer', userProfile, on
           >
             <span className="material-symbols-outlined text-2xl">{isMobileMenuOpen ? 'close' : 'menu'}</span>
           </button>
-          <div className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
-            <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: '"FILL" 1' }}>grass</span>
-            <span className="tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Anvaya</span>
-          </div>
+          <BrandLogo size="md" onClick={onNavigateBack} />
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-secondary/15 text-secondary border border-secondary/30 ml-2">
             <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>agriculture</span>
             <span>Farmer Hub</span>

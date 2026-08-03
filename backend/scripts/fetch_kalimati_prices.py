@@ -263,14 +263,34 @@ def save_translations(translations: dict[str, str]) -> None:
         )
 
 
+FALLBACK_COMMODITY_MAP: dict[str, str] = {
+    "आँप(चोसा)": "Mango (Chausa)",
+    "आँप(दशहरी)": "Mango (Dasheri)",
+    "आँप(मालदह)": "Mango (Maldah)",
+    "आभोकाडो": "Avocado",
+}
+
+
 def add_english_fields(records: list[dict]) -> list[dict]:
     names = list(dict.fromkeys(record["commodity_name_ne"] for record in records))
     translations = get_translation_cache()
     missing_names = [name for name in names if name not in translations]
     if missing_names:
-        new_translations = translate_names_with_gemini(missing_names)
-        save_translations(new_translations)
-        translations.update(new_translations)
+        api_key = os.getenv("GEMINI_API_KEY")
+        if api_key:
+            try:
+                new_translations = translate_names_with_gemini(missing_names)
+                save_translations(new_translations)
+                translations.update(new_translations)
+            except Exception as err:
+                logger.warning(f"Gemini translation failed for missing names ({err}); using fallback map.")
+        else:
+            logger.info("GEMINI_API_KEY not configured; using fallback commodity translation map.")
+
+        # Fill any remaining un-translated names with fallback dictionary or original name
+        for name in missing_names:
+            if name not in translations:
+                translations[name] = FALLBACK_COMMODITY_MAP.get(name, name)
 
     unit_names = {
         "के.जी.": "kg",
@@ -281,7 +301,7 @@ def add_english_fields(records: list[dict]) -> list[dict]:
         "प्रति गोटा": "piece",
     }
     for record in records:
-        record["commodity_name_en"] = translations[record["commodity_name_ne"]]
+        record["commodity_name_en"] = translations.get(record["commodity_name_ne"], record["commodity_name_ne"])
         record["unit_en"] = unit_names.get(record["unit_ne"], record["unit_ne"])
     return records
 

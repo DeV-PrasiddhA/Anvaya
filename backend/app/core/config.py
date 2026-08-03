@@ -11,6 +11,16 @@ class Settings(BaseSettings):
     app_environment: str = "development"
     api_v1_prefix: str = "/api/v1"
 
+    # Optional integrations. These remain optional so the health endpoint can
+    # run locally even when the corresponding services are not configured.
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-3.6-flash"
+    kalimati_retention_days: int = 7
+    supabase_url: str | None = None
+    supabase_anon_key: str | None = None
+    supabase_service_role_key: str | None = None
+    database_url: str | None = None
+
     cors_origins: list[str] = [
         "http://localhost:3000",
         "http://localhost:5173",

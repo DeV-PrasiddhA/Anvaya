@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { UserProfile } from './SignUp';
+import BrandLogo from './BrandLogo';
 
 interface RetailerDashboardProps {
   userProfile?: UserProfile;
@@ -59,10 +60,7 @@ export default function RetailerDashboard({ userProfile, onNavigateBack }: Retai
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden text-primary p-2 border-none bg-transparent cursor-pointer">
             <span className="material-symbols-outlined text-2xl">{isMobileMenuOpen ? 'close' : 'menu'}</span>
           </button>
-          <div className="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
-            <span className="material-symbols-outlined text-secondary">grass</span>
-            <span className="tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Anvaya</span>
-          </div>
+          <BrandLogo size="md" onClick={onNavigateBack} />
           <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 text-primary border border-primary/30 ml-2">
             <span className="material-symbols-outlined text-sm">storefront</span>
             <span>Retailer Hub</span>
