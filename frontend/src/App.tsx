@@ -53,6 +53,7 @@ function App() {
   const [marketPrices, setMarketPrices] = useState<MarketPrice[]>([]);
   const [marketPricesLoading, setMarketPricesLoading] = useState(true);
   const [marketPriceSearch, setMarketPriceSearch] = useState('');
+  const [showNepaliMarketNames, setShowNepaliMarketNames] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -263,16 +264,16 @@ function App() {
   };
 
   const cropTickerItems = marketPrices.map((item) => ({
-    name: item.crop_name,
+    name: item.crop_name_ne || item.crop_name,
     price: `NPR ${item.price_npr.toLocaleString()}/${item.unit}`,
-    change: item.change_percent === null
-      ? 'new'
-      : `${item.change_percent >= 0 ? '+' : ''}${item.change_percent.toFixed(1)}% vs prior day`,
+    changePercent: item.change_percent,
     up: item.is_up ?? true,
   }));
 
   // Duplicate items for seamless continuous loop
-  const getMarketDisplayName = (item: MarketPrice) => item.crop_name;
+  const getMarketDisplayName = (item: MarketPrice) => (
+    showNepaliMarketNames || lang === 'ne' ? item.crop_name_ne || item.crop_name : item.crop_name
+  );
 
   const tickerList = [...cropTickerItems, ...cropTickerItems];
   const filteredMarketPrices = marketPrices.filter((item) => {
@@ -372,8 +373,42 @@ function App() {
             <div key={index} className="flex items-center gap-2 px-4 border-r border-outline-variant/30">
               <span className="font-semibold text-primary">{item.name}</span>
               <span className="text-on-surface-variant">{item.price}</span>
-              <span className="text-xs font-bold text-on-surface-variant">
-                {item.change}
+              <span
+                className="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant"
+                title={item.changePercent === null ? 'No prior-day price available' : 'Daily price movement'}
+              >
+                {item.changePercent === null ? (
+                  <span>New</span>
+                ) : (
+                  <>
+                    <svg
+                      className={item.up ? 'text-emerald-600' : 'text-red-500'}
+                      width="38"
+                      height="18"
+                      viewBox="0 0 38 18"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <polyline
+                        points={item.up ? '1,15 7,13 12,14 19,9 25,10 31,5 36,3' : '1,3 7,5 12,4 19,9 25,8 31,13 36,15'}
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d={item.up ? 'M32 3h4v4' : 'M32 15h4v-4'}
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className={item.up ? 'text-emerald-700' : 'text-red-600'}>
+                      {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(1)}%
+                    </span>
+                  </>
+                )}
               </span>
             </div>
           ))}
@@ -539,17 +574,30 @@ function App() {
               <h2 className="text-2xl md:text-4xl font-bold text-primary mt-2 mb-3">Location-Wise Market Price Comparison</h2>
               <p className="text-sm text-on-surface-variant">Compare live wholesale produce floor prices across major Nepalese agricultural hubs.</p>
             </div>
-            <label className="relative w-full lg:w-80 shrink-0">
-              <span className="sr-only">Search market prices</span>
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-on-surface-variant">search</span>
-              <input
-                type="search"
-                value={marketPriceSearch}
-                onChange={(event) => setMarketPriceSearch(event.target.value)}
-                placeholder="Search commodity or market"
-                className="w-full rounded-xl border border-outline-variant/40 bg-white px-10 py-3 text-xs text-primary outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-              />
-            </label>
+            <div className="flex w-full lg:w-auto shrink-0 flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={() => setShowNepaliMarketNames((visible) => !visible)}
+                aria-pressed={showNepaliMarketNames}
+                className={`rounded-xl border px-4 py-3 text-xs font-bold transition-colors ${showNepaliMarketNames
+                  ? 'border-secondary bg-secondary text-white'
+                  : 'border-outline-variant/40 bg-white text-primary hover:border-secondary hover:text-secondary'
+                  }`}
+              >
+                {showNepaliMarketNames ? 'Show English' : 'नेपाली नाम'}
+              </button>
+              <label className="relative w-full sm:w-80">
+                <span className="sr-only">Search market prices</span>
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-on-surface-variant">search</span>
+                <input
+                  type="search"
+                  value={marketPriceSearch}
+                  onChange={(event) => setMarketPriceSearch(event.target.value)}
+                  placeholder={lang === 'ne' ? 'वस्तु वा बजार खोज्नुहोस्' : 'Search commodity or market'}
+                  className="w-full rounded-xl border border-outline-variant/40 bg-white px-10 py-3 text-xs text-primary outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                />
+              </label>
+            </div>
           </div>
 
           <div className="bg-white/90 glass-panel rounded-3xl p-6 border border-white/60 shadow-md overflow-hidden">
