@@ -264,7 +264,7 @@ function App() {
   };
 
   const cropTickerItems = marketPrices.map((item) => ({
-    name: item.crop_name_ne || item.crop_name,
+    name: showNepaliMarketNames ? item.crop_name_ne || item.crop_name : item.crop_name,
     price: `NPR ${item.price_npr.toLocaleString()}/${item.unit}`,
     changePercent: item.change_percent,
     up: item.is_up ?? true,
@@ -272,7 +272,7 @@ function App() {
 
   // Duplicate items for seamless continuous loop
   const getMarketDisplayName = (item: MarketPrice) => (
-    showNepaliMarketNames || lang === 'ne' ? item.crop_name_ne || item.crop_name : item.crop_name
+    showNepaliMarketNames ? item.crop_name_ne || item.crop_name : item.crop_name
   );
 
   const tickerList = [...cropTickerItems, ...cropTickerItems];
@@ -593,7 +593,7 @@ function App() {
                   type="search"
                   value={marketPriceSearch}
                   onChange={(event) => setMarketPriceSearch(event.target.value)}
-                  placeholder={lang === 'ne' ? 'वस्तु वा बजार खोज्नुहोस्' : 'Search commodity or market'}
+                  placeholder={showNepaliMarketNames ? 'वस्तु वा बजार खोज्नुहोस्' : 'Search commodity or market'}
                   className="w-full rounded-xl border border-outline-variant/40 bg-white px-10 py-3 text-xs text-primary outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                 />
               </label>
