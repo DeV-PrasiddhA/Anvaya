@@ -20,7 +20,18 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
-      - run: python scripts/fetch_kalimati_prices.py
+      - name: Fetch and store Kalimati prices
+        run: |
+          for attempt in 1 2 3; do
+            echo "Kalimati import attempt ${attempt}/3"
+            if python scripts/fetch_kalimati_prices.py; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              sleep 20
+            fi
+          done
+          exit 1
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

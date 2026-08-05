@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import re
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Iterable
@@ -26,6 +27,7 @@ PRICE_URL = "https://kalimatimarket.gov.np/price"
 NEPAL_TIMEZONE = ZoneInfo("Asia/Kathmandu")
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 USER_AGENT = "Anvaya-Market-Research/0.2"
+CSRF_FETCH_ATTEMPTS = 3
 
 logger = logging.getLogger("kalimati_prices")
 DEFAULT_RETENTION_DAYS = 7
@@ -36,19 +38,51 @@ def load_environment() -> None:
     load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
-def get_csrf_token(session: requests.Session) -> str:
-    response = session.get(
-        PRICE_URL,
-        timeout=30,
-        headers={"User-Agent": USER_AGENT},
-    )
-    response.raise_for_status()
+def extract_csrf_token(html: str) -> str | None:
+    soup = BeautifulSoup(html, "html.parser")
+    token_input = soup.select_one("input[name='_token'][value], input#csrf[value]")
+    if token_input is not None and token_input.get("value"):
+        return str(token_input["value"])
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    token_input = soup.find("input", {"name": "_token"})
-    if token_input is None or not token_input.get("value"):
-        raise RuntimeError("Could not find the Kalimati CSRF token.")
-    return str(token_input["value"])
+    # Keep the importer tolerant of minor markup changes or attribute order
+    # changes in the government site's HTML.
+    token_match = re.search(
+        r"<input[^>]+(?:name=['\"]_token['\"][^>]*value|value=['\"][^'\"]+['\"][^>]*name=['\"]_token['\"])=['\"]([^'\"]+)",
+        html,
+        flags=re.IGNORECASE,
+    )
+    return token_match.group(1) if token_match else None
+
+
+def get_csrf_token(session: requests.Session) -> str:
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": "text/html,application/xhtml+xml",
+        "Cache-Control": "no-cache",
+    }
+
+    for attempt in range(1, CSRF_FETCH_ATTEMPTS + 1):
+        response = session.get(
+            PRICE_URL,
+            params={"_": str(int(time.time() * 1000))},
+            timeout=30,
+            headers=headers,
+        )
+        response.raise_for_status()
+        token = extract_csrf_token(response.text)
+        if token:
+            return token
+        if attempt < CSRF_FETCH_ATTEMPTS:
+            logger.warning(
+                "Kalimati price page did not include a CSRF token; retrying (%s/%s).",
+                attempt,
+                CSRF_FETCH_ATTEMPTS,
+            )
+            time.sleep(attempt * 2)
+
+    raise RuntimeError(
+        f"Could not find the Kalimati CSRF token after {CSRF_FETCH_ATTEMPTS} attempts."
+    )
 
 
 def fetch_price_page(
