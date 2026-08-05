@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard'
 import BrandLogo from './components/BrandLogo'
 import { supabase } from './supabaseClient'
 import { fetchMarketPricesFromSupabase, fetchUserProfile, registerUserInSupabase, type MarketPrice } from './api'
+import { formatNepalDate } from './utils/time'
 
 function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | undefined>(() => {
@@ -642,7 +643,7 @@ function App() {
                       </td>
                       <td className="py-3.5 font-semibold">NPR {item.maximum_price_npr.toLocaleString()}</td>
                       <td className="py-3.5 text-xs text-on-surface-variant">{item.market}</td>
-                      <td className="py-3.5 text-right pr-4 font-bold text-secondary text-xs">{item.price_date}</td>
+                      <td className="py-3.5 text-right pr-4 font-bold text-secondary text-xs">{formatNepalDate(item.price_date)}</td>
                     </tr>
                   ))}
                 </tbody>
