@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,16 +11,17 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     app_environment: str = "development"
     api_v1_prefix: str = "/api/v1"
+    port: int = 5001
 
-    # Optional integrations. These remain optional so the health endpoint can
-    # run locally even when the corresponding services are not configured.
-    gemini_api_key: str | None = None
+    database_url: str | None = None
+
+    supabase_url: str | None = None
+    supabase_anon_key: SecretStr | None = None
+    supabase_service_role_key: SecretStr | None = None
+
+    gemini_api_key: SecretStr | None = None
     gemini_model: str = "gemini-3.6-flash"
     kalimati_retention_days: int = 7
-    supabase_url: str | None = None
-    supabase_anon_key: str | None = None
-    supabase_service_role_key: str | None = None
-    database_url: str | None = None
 
     cors_origins: list[str] = [
         "http://localhost:3000",
