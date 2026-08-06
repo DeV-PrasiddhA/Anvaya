@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { registerUserInSupabase, loginUserInSupabase } from '../api';
-import { signInWithEmail, signInWithGoogle } from '../supabaseClient';
+import { fetchUserProfile, registerUserInSupabase } from '../api';
+import { signInWithEmail, signInWithGoogle, signOutUser } from '../supabaseClient';
 import BrandLogo from './BrandLogo';
 
 export interface UserProfile {
@@ -139,6 +139,10 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         setFormError('Please select your role.');
         return false;
       }
+      if (selectedRole === 'Cooperative') {
+        setFormError('Cooperative accounts are coming soon and are not available yet.');
+        return false;
+      }
     } else if (currentStep === 2) {
       if (!name.trim()) {
         setFormError('Please enter your Full Name.');
@@ -184,6 +188,11 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
       setFormError('Password must be at least 6 characters.');
       return;
     }
+    if (selectedRole === 'Cooperative') {
+      setFormError('Cooperative accounts are coming soon and are not available yet.');
+      setStep(1);
+      return;
+    }
 
     try {
       setAuthLoading(true);
@@ -202,8 +211,8 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         extraField2: extraField2.trim(),
       };
 
-      // 1. Send profile + credentials to backend API with isNewSignup check
-      const res = await registerUserInSupabase({
+      // Supabase Auth creates the credential; the Express API stores the profile.
+      await registerUserInSupabase({
         email: email.trim(),
         password: password,
         name: newProfile.name,
@@ -218,17 +227,8 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         isNewSignup: true,
       });
 
-      if (res?.error) {
-        setFormError(res.error);
-        return;
-      }
-
-      // 2. Sign in immediately to retrieve valid Supabase session
-      try {
-        await signInWithEmail(email.trim(), password);
-      } catch (e) {
-        // Fallback session
-      }
+      // Sign in immediately so the browser receives the Supabase session.
+      await signInWithEmail(email.trim(), password);
 
       if (onNavigateToDashboard) {
         onNavigateToDashboard(newProfile);
@@ -252,35 +252,36 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
       setAuthLoading(true);
       setFormError('');
 
-      // 1. Try login endpoint (handles Supabase Auth + Database fallback)
-      const res = await loginUserInSupabase(email.trim(), password);
+      // Authenticate in the browser, then load the profile using the Auth user ID.
+      const { user } = await signInWithEmail(email.trim().toLowerCase(), password);
+      const dbUser = await fetchUserProfile(user.id);
 
-      if (res?.user) {
-        const u = res.user;
-        const profile: UserProfile = {
-          name: u.name || u.user_metadata?.full_name || email.split('@')[0],
-          email: u.email || email.trim(),
-          role: u.role || 'Farmer',
-          phone: u.phone,
-          province: u.province,
-          district: u.district,
-          ward: u.ward,
-          localLocation: u.local_location,
-          extraField1: u.extra_field_1,
-          extraField2: u.extra_field_2,
-        };
-
-        try {
-          await signInWithEmail(email.trim(), password);
-        } catch {}
-
-        if (onNavigateToDashboard) {
-          onNavigateToDashboard(profile);
-        }
-        return;
+      if (!dbUser) {
+        await signOutUser();
+        throw new Error('Your authentication account exists, but your database profile was not found. Please complete Sign Up.');
       }
 
-      setFormError(res?.error || 'Invalid login credentials. Please check your email and password.');
+      if (dbUser.role === 'Cooperative') {
+        await signOutUser();
+        throw new Error('Cooperative accounts are coming soon and are not available yet.');
+      }
+
+      const profile: UserProfile = {
+        name: dbUser.name || email.split('@')[0],
+        email: dbUser.email || email.trim(),
+        role: dbUser.role || 'Farmer',
+        phone: dbUser.phone,
+        province: dbUser.province,
+        district: dbUser.district,
+        ward: dbUser.ward,
+        localLocation: dbUser.local_location,
+        extraField1: dbUser.extra_field_1,
+        extraField2: dbUser.extra_field_2,
+      };
+
+      if (onNavigateToDashboard) {
+        onNavigateToDashboard(profile);
+      }
     } catch (err: any) {
       setFormError(err.message || 'Invalid login credentials. Please check your email and password.');
     } finally {
@@ -297,6 +298,12 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
       if (!name.trim()) {
         setFormError('Please enter your Full Name in Step 2.');
         setStep(2);
+        setAuthLoading(false);
+        return;
+      }
+      if (selectedRole === 'Cooperative') {
+        setFormError('Cooperative accounts are coming soon and are not available yet.');
+        setStep(1);
         setAuthLoading(false);
         return;
       }
@@ -531,14 +538,30 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
                 <div className="grid grid-cols-1 gap-3">
                   {roles.map((r) => {
                     const isSelected = selectedRole === r.id;
+                    const isUnavailable = r.id === 'Cooperative';
                     return (
                       <div
                         key={r.id}
-                        onClick={() => setSelectedRole(r.id)}
-                        className={`p-4 rounded-xl border text-left cursor-pointer transition-all flex items-center justify-between ${
+                        role="button"
+                        aria-disabled={isUnavailable}
+                        onClick={() => {
+                          if (isUnavailable) {
+                            setFormError('Cooperative accounts are coming soon and are not available yet.');
+                            return;
+                          }
+                          setFormError('');
+                          setSelectedRole(r.id);
+                        }}
+                        className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
+                          isUnavailable
+                            ? 'border-amber-200 bg-amber-50/60 cursor-not-allowed opacity-75'
+                            : 'cursor-pointer'
+                        } ${
                           isSelected
                             ? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/20'
-                            : 'border-slate-200 bg-slate-50/50 hover:bg-white'
+                            : isUnavailable
+                              ? ''
+                              : 'border-slate-200 bg-slate-50/50 hover:bg-white'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -546,7 +569,14 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
                             {r.icon}
                           </span>
                           <div>
-                            <div className="font-bold text-slate-900 text-sm">{r.title}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-bold text-slate-900 text-sm">{r.title}</div>
+                              {isUnavailable && (
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-900">
+                                  Coming Soon
+                                </span>
+                              )}
+                            </div>
                             <div className="text-xs text-slate-500">{r.description}</div>
                           </div>
                         </div>

@@ -4,7 +4,35 @@
 
 import { supabase } from './supabaseClient';
 
-const API_BASE_URL = 'http://localhost:5001/api';
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+const API_BASE_URL = (configuredApiBaseUrl || (import.meta.env.DEV ? 'http://localhost:5001/api' : '/api')).replace(/\/$/, '');
+
+class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init?.headers || {}),
+    },
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new ApiError(data?.error || `Request failed with status ${response.status}`, response.status);
+  }
+
+  return data as T;
+}
 
 export interface UserSignupPayload {
   id?: string;
@@ -61,36 +89,35 @@ export interface MarketPrice {
  * Register or update user profile in Supabase
  */
 export async function registerUserInSupabase(payload: UserSignupPayload) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/users/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    return data;
-  } catch (err) {
-    console.warn('API call to register user failed:', err);
-    return null;
-  }
+  return apiRequest<{ message: string; user: UserProfileRecord }>('/users/signup', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 
 /**
  * Log in user via Supabase / backend authentication fallback
  */
 export async function loginUserInSupabase(email: string, password?: string) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/users/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    return data;
-  } catch (err) {
-    console.warn('API call to login user failed:', err);
-    return null;
-  }
+  return apiRequest<{ message: string; user: UserProfileRecord }>('/users/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export interface UserProfileRecord {
+  id?: string;
+  name: string;
+  role: UserSignupPayload['role'];
+  user_metadata?: { full_name?: string };
+  phone?: string;
+  email?: string;
+  province?: string;
+  district?: string;
+  ward?: string;
+  local_location?: string;
+  extra_field_1?: string;
+  extra_field_2?: string;
 }
 
 /**
@@ -98,13 +125,10 @@ export async function loginUserInSupabase(email: string, password?: string) {
  */
 export async function fetchUserProfile(identifier: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/users/profile/${encodeURIComponent(identifier)}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data;
+    return await apiRequest<UserProfileRecord>(`/users/profile/${encodeURIComponent(identifier)}`);
   } catch (err) {
-    console.warn('API call to fetch profile failed:', err);
-    return null;
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
   }
 }
 

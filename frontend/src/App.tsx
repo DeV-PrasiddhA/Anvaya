@@ -7,36 +7,13 @@ import { fetchMarketPricesFromSupabase, fetchUserProfile, registerUserInSupabase
 import { formatNepalDate } from './utils/time'
 
 function App() {
-  const [userProfile, setUserProfile] = useState<UserProfile | undefined>(() => {
-    try {
-      const saved = localStorage.getItem('anvaya_user_profile');
-      return saved ? JSON.parse(saved) : undefined;
-    } catch {
-      return undefined;
-    }
-  });
+  const [userProfile, setUserProfile] = useState<UserProfile | undefined>();
 
-  const [farmerName, setFarmerName] = useState(() => {
-    try {
-      const saved = localStorage.getItem('anvaya_user_profile');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.name) return parsed.name;
-      }
-    } catch {}
-    return 'Farmer';
-  });
+  const [farmerName, setFarmerName] = useState('Farmer');
 
   const [currentPage, setCurrentPage] = useState<'landing' | 'signup' | 'farmer-dashboard'>(() => {
     if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('error='))) {
       return 'signup';
-    }
-    const saved = localStorage.getItem('anvaya_user_profile');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.phone && parsed.district) return 'farmer-dashboard';
-      } catch {}
     }
     return 'landing';
   });
@@ -79,20 +56,6 @@ function App() {
     try {
       const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
       const email = user.email || '';
-
-      // Check if local saved profile is already complete
-      const cachedProfileStr = localStorage.getItem('anvaya_user_profile');
-      if (cachedProfileStr) {
-        try {
-          const cached = JSON.parse(cachedProfileStr);
-          if (cached.phone && cached.district && cached.email === email) {
-            setUserProfile(cached);
-            setFarmerName(cached.name || profileName);
-            setCurrentPage('farmer-dashboard');
-            return;
-          }
-        } catch {}
-      }
 
       // Check if there is a pending questionnaire profile from Google signup
       const savedPending = localStorage.getItem('pending_google_signup_profile');
@@ -141,13 +104,13 @@ function App() {
       }
 
       // Check if user profile exists in database
-      const existingDbProfile = await fetchUserProfile(email || user.id);
+      const existingDbProfile = await fetchUserProfile(user.id);
 
-      // If account was originally created using Email & Password, block Google OAuth login for this email
-      if (existingDbProfile && existingDbProfile.password && user.app_metadata?.provider === 'google') {
+      if (existingDbProfile?.role === 'Cooperative') {
         await supabase.auth.signOut();
         localStorage.removeItem('anvaya_user_profile');
-        setAuthErrorNotice(`This email (${email}) was registered using Email and Password. Please log in using your Email and Password.`);
+        setUserProfile(undefined);
+        setAuthErrorNotice('Cooperative accounts are coming soon and are not available yet.');
         setCurrentPage('signup');
         return;
       }
@@ -493,8 +456,10 @@ function App() {
 
               {/* Cooperative Entrance */}
               <button
-                onClick={() => setCurrentPage('signup')}
-                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-amber-500 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col items-center text-center justify-between group min-h-[170px] relative"
+                type="button"
+                disabled
+                aria-label="Cooperative coming soon"
+                className="p-5 rounded-2xl bg-white border border-amber-200 transition-all duration-300 cursor-not-allowed flex flex-col items-center text-center justify-between group min-h-[170px] relative opacity-80"
               >
                 <span className="absolute top-3.5 right-3.5 px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
                   Coming Soon
@@ -507,8 +472,8 @@ function App() {
                   <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">Aggregate member harvest pools & auctions</p>
                 </div>
                 <div className="mt-3.5 pt-2.5 border-t border-slate-100 w-full flex items-center justify-center gap-1 text-xs font-bold text-amber-700 group-hover:text-amber-800">
-                  <span>Preview Teaser</span>
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  <span>Coming Soon</span>
+                  <span className="material-symbols-outlined text-sm">schedule</span>
                 </div>
               </button>
 

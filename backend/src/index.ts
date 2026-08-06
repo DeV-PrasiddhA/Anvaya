@@ -7,10 +7,21 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const defaultCorsOrigins = ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'];
+const corsOrigins = (process.env.CORS_ORIGINS || defaultCorsOrigins.join(','))
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 // Enable CORS so the React frontend can request resources from this server
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: (origin, callback) => {
+    if (!origin || corsOrigins.includes('*') || corsOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error(`Origin ${origin} is not allowed by CORS`));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -100,6 +111,12 @@ app.post('/api/users/signup', async (req: Request, res: Response) => {
   if (!name || !role) {
     return res.status(400).json({ error: 'Name and Role are required.' });
   }
+  if (role === 'Cooperative') {
+    return res.status(403).json({ error: 'Cooperative accounts are coming soon and are not available yet.' });
+  }
+  if (!id && (!email || !password)) {
+    return res.status(400).json({ error: 'Email and password are required for a new account.' });
+  }
 
   try {
     // Check if user already exists when creating a new account
@@ -116,7 +133,10 @@ app.post('/api/users/signup', async (req: Request, res: Response) => {
         checkQuery = checkQuery.eq('phone', phone);
       }
 
-      const { data: existingProfiles } = await checkQuery;
+      const { data: existingProfiles, error: existingProfilesError } = await checkQuery;
+      if (existingProfilesError) {
+        return res.status(500).json({ error: 'Could not check whether the account already exists.' });
+      }
       if (existingProfiles && existingProfiles.length > 0) {
         return res.status(400).json({
           error: 'An account with this email address or phone number already exists. Please switch to the Log In tab to access your account.'
@@ -125,91 +145,59 @@ app.post('/api/users/signup', async (req: Request, res: Response) => {
     }
 
     let authUserId = id;
+    let createdAuthUser = false;
 
-    // Auto-confirm user in Supabase Auth if email and password are provided
+    // Supabase Auth owns credentials. The public.users table stores only the profile.
     if (email && password) {
-      try {
-        const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-          user_metadata: { full_name: name }
-        });
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: email.trim().toLowerCase(),
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: name.trim() },
+      });
 
-        if (authUser?.user) {
-          authUserId = authUser.user.id;
-        } else if (authErr && authErr.message?.includes('already registered')) {
-          if (isNewSignup) {
-            return res.status(400).json({
-              error: 'An account with this email address already exists. Please switch to the Log In tab to access your account.'
-            });
-          }
-          // If updating existing user, update password
-          const { data: existingUsers } = await supabase.auth.admin.listUsers();
-          const target = existingUsers?.users?.find(u => u.email === email);
-          if (target) {
-            authUserId = target.id;
-            await supabase.auth.admin.updateUserById(target.id, { password, email_confirm: true });
-          }
-        }
-      } catch (e) {
-        console.warn('Admin auth creation warning:', e);
+      if (authError || !authData.user) {
+        const duplicate = authError?.message?.toLowerCase().includes('already registered');
+        return res.status(duplicate ? 409 : 400).json({
+          error: duplicate
+            ? 'An account with this email address already exists. Please switch to the Log In tab.'
+            : authError?.message || 'Could not create the authentication account.',
+        });
       }
+
+      authUserId = authData.user.id;
+      createdAuthUser = true;
     }
 
-    const userPayload: any = {
-      name,
+    if (!authUserId) {
+      return res.status(400).json({ error: 'A valid authenticated user is required.' });
+    }
+
+    const userPayload = {
+      id: authUserId,
+      name: name.trim(),
       role,
       province: province || req.body.province || 'Bagmati Province',
       district: district || req.body.district || 'Kathmandu',
       ward: ward || req.body.ward || '1',
       local_location: localLocation || req.body.local_location || req.body.localLocation || '',
       extra_field_1: extraField1 || req.body.extra_field_1 || req.body.extraField1 || '',
-      extra_field_2: extraField2 || req.body.extra_field_2 || req.body.extraField2 || ''
+      extra_field_2: extraField2 || req.body.extra_field_2 || req.body.extraField2 || '',
+      ...(email ? { email: email.trim().toLowerCase() } : {}),
+      ...(phone ? { phone: phone.trim() } : {}),
     };
 
-    if (authUserId) userPayload.id = authUserId;
-    if (email) userPayload.email = email;
-    if (password) userPayload.password = password;
-    if (phone) userPayload.phone = phone;
+    const { data: resultData, error: resultError } = await supabase
+      .from('users')
+      .upsert(userPayload, { onConflict: 'id' })
+      .select()
+      .single();
 
-    // Check if row already exists by ID or Email in public.users
-    let existingRow: any = null;
-    if (authUserId) {
-      const { data: byId } = await supabase.from('users').select('*').eq('id', authUserId).maybeSingle();
-      existingRow = byId;
-    }
-    if (!existingRow && email) {
-      const { data: byEmail } = await supabase.from('users').select('*').eq('email', email).maybeSingle();
-      existingRow = byEmail;
-    }
-
-    let resultData = null;
-    let resultErr = null;
-
-    if (existingRow) {
-      // Update existing profile row with all questionnaire answers
-      const { data, error } = await supabase
-        .from('users')
-        .update(userPayload)
-        .eq('id', existingRow.id)
-        .select()
-        .single();
-      resultData = data;
-      resultErr = error;
-    } else {
-      // Insert new profile row
-      const { data, error } = await supabase
-        .from('users')
-        .insert(userPayload)
-        .select()
-        .single();
-      resultData = data;
-      resultErr = error;
-    }
-
-    if (resultErr) {
-      return res.status(400).json({ error: resultErr.message });
+    if (resultError) {
+      if (createdAuthUser) {
+        await supabase.auth.admin.deleteUser(authUserId);
+      }
+      return res.status(400).json({ error: resultError.message });
     }
 
     res.status(201).json({ message: 'User profile registered successfully', user: resultData });
@@ -223,50 +211,46 @@ app.post('/api/users/signup', async (req: Request, res: Response) => {
  * Endpoint: POST /api/users/login
  */
 app.post('/api/users/login', async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const { password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
   try {
-    // 1. Try Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (!authError && authData?.user) {
-      // Fetch profile from database
-      const { data: dbUser } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-
-      return res.json({
-        message: 'Login successful',
-        user: dbUser || {
-          id: authData.user.id,
-          email: authData.user.email,
-          name: authData.user.user_metadata?.full_name || email.split('@')[0],
-          role: 'Farmer'
-        }
-      });
+    if (authError || !authData?.user) {
+      return res.status(401).json({ error: 'Invalid login credentials. Please check your email and password.' });
     }
 
-    // 2. Fallback: Check public.users table directly for matching email & password
-    const { data: userProfile, error: profileErr } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('*')
-      .eq('email', email)
+      .eq('id', authData.user.id)
       .single();
 
-    if (userProfile && (userProfile.password === password || !userProfile.password)) {
-      return res.json({ message: 'Login successful via database profile', user: userProfile });
+    if (profileError && profileError.code !== 'PGRST116') {
+      return res.status(500).json({ error: 'Login succeeded, but the user profile could not be loaded.' });
     }
 
-    return res.status(401).json({ error: 'Invalid login credentials. Please check your email and password.' });
+    if (userProfile?.role === 'Cooperative') {
+      return res.status(403).json({ error: 'Cooperative accounts are coming soon and are not available yet.' });
+    }
+
+    return res.json({
+      message: 'Login successful',
+      user: userProfile || {
+        id: authData.user.id,
+        email: authData.user.email,
+        name: authData.user.user_metadata?.full_name || email.split('@')[0],
+        role: 'Farmer',
+      },
+    });
   } catch (err: any) {
     res.status(500).json({ error: 'Login server error', details: err.message });
   }
