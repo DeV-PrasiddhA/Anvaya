@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { UserProfile } from './SignUp';
 import BrandLogo from './BrandLogo';
+import { updateCurrentUserLocation } from '../api';
 
 interface TransportDashboardProps {
   userProfile?: UserProfile;
@@ -18,6 +19,11 @@ export default function TransportDashboard({ userProfile, onNavigateBack }: Tran
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [profileSavedMsg, setProfileSavedMsg] = useState(false);
   const [acceptedNotice, setAcceptedNotice] = useState(false);
+  const [isGpsSharing, setIsGpsSharing] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState('GPS sharing is off.');
+  const [lastGpsUpdate, setLastGpsUpdate] = useState<Date | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const lastSentRef = useRef<{ at: number; latitude: number; longitude: number } | null>(null);
 
   const displayName = profileName;
   const userLocation = `${profileLocation}, ${profileDistrict}`;
@@ -30,6 +36,61 @@ export default function TransportDashboard({ userProfile, onNavigateBack }: Tran
       setIsProfileModalOpen(false);
     }, 1200);
   };
+
+  const stopGpsSharing = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setIsGpsSharing(false);
+    setGpsStatus('GPS sharing is off.');
+  };
+
+  const startGpsSharing = () => {
+    if (!navigator.geolocation) {
+      setGpsStatus('This browser does not support GPS. Use the provider mobile device.');
+      return;
+    }
+
+    setGpsStatus('Waiting for a verified GPS fix…');
+    const watchId = navigator.geolocation.watchPosition(
+      async (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        const inNepal = latitude >= 26.347 && latitude <= 30.447 && longitude >= 80.058 && longitude <= 88.201;
+        if (!inNepal) {
+          setGpsStatus('The GPS fix is outside Nepal and was not uploaded.');
+          return;
+        }
+
+        const now = Date.now();
+        const previous = lastSentRef.current;
+        const elapsed = previous ? now - previous.at : Infinity;
+        if (previous && elapsed < 15000) return;
+
+        try {
+          await updateCurrentUserLocation({ latitude, longitude, locationAccuracyM: accuracy });
+          lastSentRef.current = { at: now, latitude, longitude };
+          setIsGpsSharing(true);
+          setLastGpsUpdate(new Date());
+          setGpsStatus(`GPS location sent. Accuracy about ${Math.round(accuracy)}m.`);
+        } catch (error) {
+          setGpsStatus(error instanceof Error ? error.message : 'Could not upload the GPS location.');
+        }
+      },
+      (error) => {
+        setGpsStatus(error.code === error.PERMISSION_DENIED
+          ? 'Location permission was denied. Enable it to share truck GPS.'
+          : 'GPS signal unavailable. Move outdoors and try again.');
+        setIsGpsSharing(false);
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 },
+    );
+
+    watchIdRef.current = watchId;
+    setIsGpsSharing(true);
+  };
+
+  useEffect(() => () => stopGpsSharing(), []);
 
   const navItems = [
     { id: 'dashboard', label: 'Operations Overview', icon: 'dashboard' },
@@ -156,7 +217,7 @@ export default function TransportDashboard({ userProfile, onNavigateBack }: Tran
             {acceptedNotice && (
               <div className="p-4 rounded-2xl bg-emerald-500/20 text-emerald-900 border border-emerald-500/40 text-xs font-bold flex items-center gap-2 animate-fade-in">
                 <span className="material-symbols-outlined text-base">check_circle</span>
-                <span>Freight load accepted! Assigned to Truck #BA-3-PA-1234. GPS tracking activated.</span>
+                <span>Freight load accepted. Open Fleet Dispatch &amp; GPS to share the provider’s current location.</span>
               </div>
             )}
 
@@ -220,28 +281,40 @@ export default function TransportDashboard({ userProfile, onNavigateBack }: Tran
         {/* FLEET GPS DISPATCH */}
         {activeNav === 'logistics' && (
           <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
-            <h1 className="text-2xl font-bold text-primary">Live GPS Fleet Dispatch &amp; Digital POD</h1>
-            <div className="p-6 rounded-3xl glass-panel border bg-slate-950 text-white shadow-2xl space-y-4">
-              <div className="flex justify-between items-center border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
-                  <h4 className="font-bold text-base text-white">Truck #BA-3-PA-1234 (Cold-Chain Reefer)</h4>
+            <h1 className="text-2xl font-bold text-primary">Transport GPS location sharing</h1>
+            <div className="p-6 rounded-3xl glass-panel border bg-white/90 shadow-md space-y-5">
+              <div className="flex flex-wrap justify-between items-start gap-3 border-b pb-4">
+                <div>
+                  <h4 className="font-bold text-base text-primary">Share this provider’s current location</h4>
+                  <p className="text-xs text-on-surface-variant mt-1">The map shows your truck marker as live only after a successful GPS upload.</p>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Active Dispatch</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${isGpsSharing ? 'bg-emerald-500/15 text-emerald-800 border border-emerald-500/30' : 'bg-slate-500/10 text-slate-700 border border-slate-300'}`}>
+                  {isGpsSharing ? 'GPS sharing on' : 'GPS sharing off'}
+                </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 <div>
-                  <p className="text-slate-400">Driver &amp; Mobile:</p>
-                  <p className="font-bold text-white text-sm">Pasang Sherpa (+977 9801122334)</p>
+                  <p className="text-on-surface-variant">Account</p>
+                  <p className="font-bold text-primary text-sm">{displayName}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Cargo Payload:</p>
-                  <p className="font-bold text-white text-sm">1.5 Tons Mustang Apples</p>
+                  <p className="text-on-surface-variant">Vehicle / license</p>
+                  <p className="font-bold text-primary text-sm">{userProfile?.extraField2 || 'Not provided'}</p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Highway Speed &amp; ETA:</p>
-                  <p className="font-bold text-emerald-400 text-sm">54 km/h • ETA 4:30 PM (75% Complete)</p>
+                  <p className="text-on-surface-variant">Last successful upload</p>
+                  <p className="font-bold text-primary text-sm">{lastGpsUpdate ? lastGpsUpdate.toLocaleTimeString() : 'None this session'}</p>
                 </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={isGpsSharing ? stopGpsSharing : startGpsSharing}
+                  className={`rounded-xl px-5 py-2.5 text-xs font-bold border-none cursor-pointer ${isGpsSharing ? 'bg-red-600 text-white' : 'bg-secondary text-on-secondary'}`}
+                >
+                  {isGpsSharing ? 'Stop GPS sharing' : 'Start GPS sharing'}
+                </button>
+                <p className="text-xs text-on-surface-variant">{gpsStatus}</p>
               </div>
             </div>
           </div>

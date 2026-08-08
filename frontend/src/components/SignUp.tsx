@@ -12,6 +12,11 @@ export interface UserProfile {
   district?: string;
   ward?: string;
   localLocation?: string;
+  latitude?: number;
+  longitude?: number;
+  locationAccuracyM?: number;
+  locationSource?: 'gps' | 'manual' | 'district_centroid' | 'admin';
+  showOnMap?: boolean;
   extraField1?: string;
   extraField2?: string;
 }
@@ -48,6 +53,12 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
   const [district, setDistrict] = useState('Kathmandu');
   const [ward, setWard] = useState('1');
   const [localLocation, setLocalLocation] = useState('');
+  const [latitude, setLatitude] = useState<number | undefined>(initialProfile?.latitude);
+  const [longitude, setLongitude] = useState<number | undefined>(initialProfile?.longitude);
+  const [locationAccuracyM, setLocationAccuracyM] = useState<number | undefined>(initialProfile?.locationAccuracyM);
+  const [locationStatus, setLocationStatus] = useState('Your location is required to place this account on the Nepal map.');
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [showOnMap, setShowOnMap] = useState(initialProfile?.showOnMap ?? true);
   const [extraField1, setExtraField1] = useState('');
   const [extraField2, setExtraField2] = useState('');
 
@@ -157,6 +168,10 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         setFormError('Please select your Province and District.');
         return false;
       }
+      if (latitude === undefined || longitude === undefined) {
+        setFormError('Please use the location button so your account can be placed on the Nepal map.');
+        return false;
+      }
     } else if (currentStep === 4) {
       if (!extraField1.trim()) {
         setFormError(`Please specify your ${currentRoleConfig.label1}.`);
@@ -164,6 +179,43 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
       }
     }
     return true;
+  };
+
+  const requestCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('This browser does not support GPS. Please use a phone or a modern browser.');
+      return;
+    }
+
+    setLocationLoading(true);
+    setFormError('');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude: nextLatitude, longitude: nextLongitude, accuracy } = position.coords;
+        const isInNepal = nextLatitude >= 26.347 && nextLatitude <= 30.447
+          && nextLongitude >= 80.058 && nextLongitude <= 88.201;
+
+        if (!isInNepal) {
+          setLocationStatus('The detected location is outside Nepal. Please enable location services while you are in Nepal.');
+          setLocationLoading(false);
+          return;
+        }
+
+        setLatitude(nextLatitude);
+        setLongitude(nextLongitude);
+        setLocationAccuracyM(accuracy);
+        setLocationStatus(`GPS location captured (accuracy about ${Math.round(accuracy)}m).`);
+        setLocationLoading(false);
+      },
+      (error) => {
+        const message = error.code === error.PERMISSION_DENIED
+          ? 'Location permission was denied. Enable it in your browser settings to continue.'
+          : 'We could not read your location. Please try again outdoors or with GPS enabled.';
+        setLocationStatus(message);
+        setLocationLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 },
+    );
   };
 
   const handleNext = () => {
@@ -207,6 +259,11 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         district,
         ward,
         localLocation: localLocation.trim(),
+        latitude,
+        longitude,
+        locationAccuracyM,
+        locationSource: 'gps',
+        showOnMap,
         extraField1: extraField1.trim(),
         extraField2: extraField2.trim(),
       };
@@ -222,6 +279,11 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         district: newProfile.district,
         ward: newProfile.ward,
         localLocation: newProfile.localLocation,
+        latitude: newProfile.latitude,
+        longitude: newProfile.longitude,
+        locationAccuracyM: newProfile.locationAccuracyM,
+        locationSource: newProfile.locationSource,
+        showOnMap: newProfile.showOnMap,
         extraField1: newProfile.extraField1,
         extraField2: newProfile.extraField2,
         isNewSignup: true,
@@ -275,6 +337,11 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         district: dbUser.district,
         ward: dbUser.ward,
         localLocation: dbUser.local_location,
+        latitude: dbUser.latitude,
+        longitude: dbUser.longitude,
+        locationAccuracyM: dbUser.location_accuracy_m,
+        locationSource: dbUser.location_source,
+        showOnMap: dbUser.show_on_map,
         extraField1: dbUser.extra_field_1,
         extraField2: dbUser.extra_field_2,
       };
@@ -319,6 +386,12 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         setAuthLoading(false);
         return;
       }
+      if (latitude === undefined || longitude === undefined) {
+        setFormError('Please capture your GPS location in Step 3 before continuing.');
+        setStep(3);
+        setAuthLoading(false);
+        return;
+      }
 
       // Save questionnaire details to localStorage before redirecting to Google OAuth
       const pendingProfile: UserProfile = {
@@ -330,6 +403,11 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         district,
         ward,
         localLocation: localLocation.trim(),
+        latitude,
+        longitude,
+        locationAccuracyM,
+        locationSource: 'gps',
+        showOnMap,
         extraField1: extraField1.trim(),
         extraField2: extraField2.trim(),
       };
@@ -630,6 +708,7 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
                     />
                   </div>
                 </div>
+
               </div>
             )}
 
@@ -708,6 +787,28 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
                       className="w-full px-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs font-medium focus:bg-white focus:border-emerald-600 outline-none"
                     />
                   </div>
+                </div>
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-emerald-700">my_location</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-emerald-950">Pin your real GPS location</p>
+                      <p className="text-xs text-emerald-800 mt-1">This puts your role marker on the Nepal map. The public map rounds the coordinate for privacy.</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={requestCurrentLocation}
+                    disabled={locationLoading}
+                    className="w-full rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white border-none cursor-pointer disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {locationLoading ? 'Reading GPS location…' : latitude !== undefined ? 'Refresh GPS location' : 'Use my current location'}
+                  </button>
+                  <p className={`text-[11px] font-medium ${latitude !== undefined ? 'text-emerald-800' : 'text-slate-600'}`}>{locationStatus}</p>
+                  <label className="flex items-start gap-2 text-[11px] text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={showOnMap} onChange={(e) => setShowOnMap(e.target.checked)} className="mt-0.5 accent-emerald-700" />
+                    <span>Show my role marker on the shared Nepal map</span>
+                  </label>
                 </div>
               </div>
             )}

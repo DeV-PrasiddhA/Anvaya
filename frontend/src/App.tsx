@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import SignUp, { type UserProfile } from './components/SignUp'
 import Dashboard from './components/Dashboard'
 import BrandLogo from './components/BrandLogo'
@@ -32,6 +32,7 @@ function App() {
   const [marketPricesLoading, setMarketPricesLoading] = useState(true);
   const [marketPriceSearch, setMarketPriceSearch] = useState('');
   const [showNepaliMarketNames, setShowNepaliMarketNames] = useState(false);
+  const authSessionInFlight = useRef<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -52,7 +53,9 @@ function App() {
     }
   }, [marketPrices, roiCrop]);
 
-  const handleAuthUserSession = async (user: any) => {
+  const handleAuthUserSession = async (user: any, accessToken?: string) => {
+    if (authSessionInFlight.current === user.id) return;
+    authSessionInFlight.current = user.id;
     try {
       const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
       const email = user.email || '';
@@ -62,9 +65,12 @@ function App() {
       if (savedPending) {
         try {
           const pending = JSON.parse(savedPending);
-          localStorage.removeItem('pending_google_signup_profile');
+          const pendingEmail = String(pending.email || '').trim().toLowerCase();
+          if (pendingEmail && pendingEmail !== email.trim().toLowerCase()) {
+            localStorage.removeItem('pending_google_signup_profile');
+          } else {
 
-          const completeProfile: UserProfile = {
+            const completeProfile: UserProfile = {
             name: pending.name || profileName,
             role: pending.role || 'Farmer',
             phone: pending.phone || '',
@@ -73,12 +79,18 @@ function App() {
             district: pending.district,
             ward: pending.ward,
             localLocation: pending.localLocation,
+            latitude: pending.latitude,
+            longitude: pending.longitude,
+            locationAccuracyM: pending.locationAccuracyM,
+            locationSource: pending.locationSource,
+            showOnMap: pending.showOnMap,
             extraField1: pending.extraField1,
             extraField2: pending.extraField2,
-          };
+            };
 
-          // Register in database
-          await registerUserInSupabase({
+            // Register in database. The API verifies that this session belongs
+            // to the user id being completed.
+            await registerUserInSupabase({
             id: user.id,
             email: email,
             name: completeProfile.name,
@@ -88,23 +100,34 @@ function App() {
             district: completeProfile.district,
             ward: completeProfile.ward,
             localLocation: completeProfile.localLocation,
+            latitude: completeProfile.latitude,
+            longitude: completeProfile.longitude,
+            locationAccuracyM: completeProfile.locationAccuracyM,
+            locationSource: completeProfile.locationSource,
+            showOnMap: completeProfile.showOnMap,
             extraField1: completeProfile.extraField1,
             extraField2: completeProfile.extraField2,
             isNewSignup: true,
-          });
+            }, accessToken);
+            localStorage.removeItem('pending_google_signup_profile');
 
-          setFarmerName(completeProfile.name);
-          setUserProfile(completeProfile);
-          localStorage.setItem('anvaya_user_profile', JSON.stringify(completeProfile));
-          setCurrentPage('farmer-dashboard');
-          return;
+            setFarmerName(completeProfile.name);
+            setUserProfile(completeProfile);
+            localStorage.setItem('anvaya_user_profile', JSON.stringify(completeProfile));
+            setCurrentPage('farmer-dashboard');
+            return;
+          }
         } catch (e) {
           console.warn('Error saving pending profile:', e);
+          const message = e instanceof Error ? e.message : 'Could not complete your Google signup profile.';
+          setAuthErrorNotice(message);
+          setCurrentPage('signup');
+          return;
         }
       }
 
       // Check if user profile exists in database
-      const existingDbProfile = await fetchUserProfile(user.id);
+      const existingDbProfile = await fetchUserProfile(user.id, accessToken);
 
       if (existingDbProfile?.role === 'Cooperative') {
         await supabase.auth.signOut();
@@ -123,9 +146,14 @@ function App() {
           role: existingDbProfile.role || 'Farmer',
           province: existingDbProfile.province,
           district: existingDbProfile.district,
-          ward: existingDbProfile.ward,
-          localLocation: existingDbProfile.local_location,
-          extraField1: existingDbProfile.extra_field_1,
+            ward: existingDbProfile.ward,
+            localLocation: existingDbProfile.local_location,
+            latitude: existingDbProfile.latitude,
+            longitude: existingDbProfile.longitude,
+            locationAccuracyM: existingDbProfile.location_accuracy_m,
+            locationSource: existingDbProfile.location_source,
+            showOnMap: existingDbProfile.show_on_map,
+            extraField1: existingDbProfile.extra_field_1,
           extraField2: existingDbProfile.extra_field_2,
         };
         setFarmerName(profile.name);
@@ -146,6 +174,8 @@ function App() {
     } catch (e) {
       console.warn('Session check error:', e);
       setCurrentPage('signup');
+    } finally {
+      authSessionInFlight.current = null;
     }
   };
 
@@ -153,20 +183,29 @@ function App() {
   useEffect(() => {
     if (window.location.hash.includes('error=')) {
       const params = new URLSearchParams(window.location.hash.substring(1));
-      const errorDesc = params.get('error_description') || params.get('error') || 'OAuth authentication failed.';
-      setAuthErrorNotice(decodeURIComponent(errorDesc.replace(/\+/g, ' ')));
+      const rawErrorDesc = params.get('error_description') || params.get('error') || 'OAuth authentication failed.';
+      let errorDesc = rawErrorDesc;
+      try {
+        errorDesc = decodeURIComponent(rawErrorDesc.replace(/\+/g, ' '));
+      } catch {
+        // URLSearchParams already decoded the value; keep the readable value
+        // if the provider returned malformed percent-encoding.
+      }
+      setAuthErrorNotice(errorDesc);
       setCurrentPage('signup');
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        handleAuthUserSession(session.user);
+        void handleAuthUserSession(session.user, session.access_token);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        handleAuthUserSession(session.user);
+        window.setTimeout(() => {
+          void handleAuthUserSession(session.user, session.access_token);
+        }, 0);
       }
     });
 
