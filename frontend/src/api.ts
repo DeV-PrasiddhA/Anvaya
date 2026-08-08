@@ -5,7 +5,11 @@
 import { supabase } from './supabaseClient';
 
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-const API_BASE_URL = (configuredApiBaseUrl || (import.meta.env.DEV ? 'http://localhost:5001/api' : '/api')).replace(/\/$/, '');
+const API_BASE_URL = (
+  import.meta.env.PROD
+    ? '/api'
+    : configuredApiBaseUrl || 'http://localhost:5001/api'
+).replace(/\/$/, '');
 
 class ApiError extends Error {
   status: number;
@@ -17,14 +21,27 @@ class ApiError extends Error {
   }
 }
 
-async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers || {}),
-    },
-  });
+async function apiRequest<T>(path: string, init?: RequestInit, accessToken?: string): Promise<T> {
+  let token = accessToken;
+  if (!token) {
+    const { data: { session } } = await supabase.auth.getSession();
+    token = session?.access_token;
+  }
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init?.headers || {}),
+      },
+    });
+  } catch {
+    throw new Error(
+      `Cannot reach the Anvaya API at ${API_BASE_URL}. Set VITE_API_BASE_URL to the deployed API URL and allow this frontend origin in backend CORS_ORIGINS.`,
+    );
+  }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -45,6 +62,11 @@ export interface UserSignupPayload {
   district?: string;
   ward?: string;
   localLocation?: string;
+  latitude?: number;
+  longitude?: number;
+  locationAccuracyM?: number;
+  locationSource?: 'gps' | 'manual' | 'district_centroid' | 'admin';
+  showOnMap?: boolean;
   extraField1?: string;
   extraField2?: string;
   isNewSignup?: boolean;
@@ -88,11 +110,11 @@ export interface MarketPrice {
 /**
  * Register or update user profile in Supabase
  */
-export async function registerUserInSupabase(payload: UserSignupPayload) {
+export async function registerUserInSupabase(payload: UserSignupPayload, accessToken?: string) {
   return apiRequest<{ message: string; user: UserProfileRecord }>('/users/signup', {
     method: 'POST',
     body: JSON.stringify(payload),
-  });
+  }, accessToken);
 }
 
 /**
@@ -116,16 +138,60 @@ export interface UserProfileRecord {
   district?: string;
   ward?: string;
   local_location?: string;
+  latitude?: number;
+  longitude?: number;
+  location_accuracy_m?: number;
+  location_source?: 'gps' | 'manual' | 'district_centroid' | 'admin';
+  show_on_map?: boolean;
+  location_updated_at?: string;
   extra_field_1?: string;
   extra_field_2?: string;
 }
 
+export type MapRole = 'Farmer' | 'Retailer' | 'Cooperative' | 'Transport Provider';
+
+export interface MapLocation {
+  id: string;
+  name: string;
+  role: MapRole;
+  province?: string;
+  district?: string;
+  ward?: string;
+  localLocation?: string;
+  latitude: number;
+  longitude: number;
+  locationAccuracyM?: number | null;
+  locationSource?: 'gps' | 'manual' | 'district_centroid' | 'admin' | null;
+  locationUpdatedAt?: string | null;
+  isLive: boolean;
+}
+
+export async function fetchMapLocations() {
+  const response = await apiRequest<{ count: number; locations: MapLocation[]; map: { country: string } }>('/map/locations');
+  return response;
+}
+
+export async function updateCurrentUserLocation(payload: {
+  latitude: number;
+  longitude: number;
+  locationAccuracyM?: number;
+}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('Your session has expired. Please sign in again.');
+
+  return apiRequest<{ location: UserProfileRecord }>('/map/location', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
 /**
- * Fetch user profile from Supabase by phone, email, or ID
+ * Fetch the currently authenticated user's profile.
  */
-export async function fetchUserProfile(identifier: string) {
+export async function fetchUserProfile(identifier: string, accessToken?: string) {
   try {
-    return await apiRequest<UserProfileRecord>(`/users/profile/${encodeURIComponent(identifier)}`);
+    return await apiRequest<UserProfileRecord>(`/users/profile/${encodeURIComponent(identifier)}`, undefined, accessToken);
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) return null;
     throw err;

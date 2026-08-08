@@ -2,6 +2,7 @@ import { useState } from 'react';
 import CreateListing from './CreateListing';
 import type { UserProfile } from './SignUp';
 import BrandLogo from './BrandLogo';
+import TransportMap from './TransportMap';
 
 interface FarmerDashboardProps {
   farmerName?: string;
@@ -398,18 +399,33 @@ export default function FarmerDashboard({ farmerName = 'Farmer', userProfile, on
         {/* LOGISTICS & MAPS TAB */}
         {activeNav === 'logistics' && (
           <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
-            <h1 className="text-2xl font-bold text-primary">Farm Logistics &amp; Live GPS Tracking</h1>
-            <div className="p-6 rounded-3xl glass-panel border border-white/60 bg-white/90 shadow-md space-y-4">
-              <div className="flex justify-between items-center border-b pb-3">
-                <h3 className="font-bold text-base text-primary">Live Highway Dispatch Map</h3>
-                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-secondary/15 text-secondary">Live GPS Signal Active</span>
-              </div>
-              <div className="relative w-full h-64 rounded-2xl bg-slate-900 flex items-center justify-center text-white text-xs">
-                <div className="text-center space-y-1">
-                  <span className="material-symbols-outlined text-4xl text-amber-400 animate-bounce">local_shipping</span>
-                  <p className="font-bold">Truck #BA-3-PA-1234 En Route (75% Complete)</p>
-                  <p className="text-slate-400">Mustang → Pokhara Corridor • ETA 4:30 PM</p>
+            <h1 className="text-2xl font-bold text-primary">Farm Logistics &amp; Nepal Account Map</h1>
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_18rem] gap-5 p-5 md:p-6 rounded-3xl glass-panel border border-white/60 bg-white/90 shadow-md">
+              <div className="space-y-4">
+                <div className="flex flex-wrap justify-between items-center gap-3 border-b pb-3">
+                  <div>
+                    <h3 className="font-bold text-base text-primary">Real account locations</h3>
+                    <p className="text-xs text-on-surface-variant mt-0.5">Nepal-only map data from OpenStreetMap</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-secondary/15 text-secondary">Database connected</span>
                 </div>
+                <TransportMap currentUserHasLocation={Boolean(userProfile?.latitude && userProfile?.longitude)} />
+              </div>
+              <div className="space-y-3 xl:border-l xl:pl-5 border-outline-variant/20">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary">verified_user</span>
+                  <div>
+                    <p className="text-xs font-bold text-primary">Production location data</p>
+                    <p className="text-[11px] text-on-surface-variant">Markers come from registered accounts.</p>
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-surface-container-low p-3 text-xs space-y-2 text-on-surface-variant">
+                  <p>• Farmers use the agriculture marker.</p>
+                  <p>• Retailers use the storefront marker.</p>
+                  <p>• Transport providers use the truck marker.</p>
+                  <p>• Transport GPS is live only after a verified location update.</p>
+                </div>
+                <p className="text-[11px] leading-relaxed text-on-surface-variant">Exact coordinates are rounded by the API before display. Accounts can opt out of the shared map during signup.</p>
               </div>
             </div>
           </div>
