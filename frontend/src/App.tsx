@@ -125,13 +125,19 @@ function App() {
       }
 
       // Check for a pending questionnaire profile from Google OAuth signup.
-      // The Google account email is always used regardless of what was typed in the form.
+      // Only use it if the email is empty (user hadn't typed one) or matches the Google account.
       const savedPending = localStorage.getItem('pending_google_signup_profile');
       if (savedPending) {
         try {
           const pending = JSON.parse(savedPending);
-          await completePendingProfile(pending, 'pending_google_signup_profile');
-          return;
+          const pendingEmail = String(pending.email || '').trim().toLowerCase();
+          if (pendingEmail && pendingEmail !== email.trim().toLowerCase()) {
+            // Stale data from a different user — discard and require them to sign up
+            localStorage.removeItem('pending_google_signup_profile');
+          } else {
+            await completePendingProfile(pending, 'pending_google_signup_profile');
+            return;
+          }
         } catch (e) {
           console.warn('Error saving pending profile:', e);
           const message = e instanceof Error ? e.message : 'Could not complete your Google signup profile.';
