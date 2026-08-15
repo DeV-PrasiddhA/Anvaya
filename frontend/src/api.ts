@@ -5,11 +5,8 @@
 import { supabase } from './supabaseClient';
 
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-const API_BASE_URL = (
-  import.meta.env.PROD
-    ? '/api'
-    : configuredApiBaseUrl || 'http://localhost:5001/api'
-).replace(/\/$/, '');
+// In production, VITE_API_BASE_URL must point to the deployed backend (e.g. https://api.anvayanepal.com)
+const API_BASE_URL = (configuredApiBaseUrl || 'http://localhost:5001/api').replace(/\/$/, '');
 
 class ApiError extends Error {
   status: number;

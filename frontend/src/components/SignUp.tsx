@@ -44,6 +44,7 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
   });
   const [step, setStep] = useState<number>(1);
   const [authLoading, setAuthLoading] = useState(false);
+  const [formSuccess, setFormSuccess] = useState('');
 
   // Form State
   const [selectedRole, setSelectedRole] = useState<Role>('Farmer');
@@ -309,7 +310,7 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
           userId: authData.user.id,
           ...newProfile,
         }));
-        setFormError('Account created! Please check your email and click the confirmation link to activate your account.');
+        setFormSuccess('Account created! Check your inbox and click the confirmation link to activate your account. If you don\'t see it, check your spam folder.');
       }
     } catch (err: any) {
       const msg: string = err.message || '';
@@ -374,9 +375,16 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
       }
     } catch (err: any) {
       const rawMsg: string = err.message || 'Invalid login credentials. Please check your email and password.';
+      const isNotConfirmed = /email not confirmed/i.test(rawMsg);
       const isCredentialError = /invalid.*(login|credential|password)/i.test(rawMsg) || rawMsg.toLowerCase().includes('invalid login');
-      const hint = isCredentialError ? ' If you registered with Google, use "Log In with Google Account" below.' : '';
-      setFormError(rawMsg + hint);
+      if (isNotConfirmed) {
+        // Resend the confirmation email and show a success message
+        await supabase.auth.resend({ type: 'signup', email: email.trim().toLowerCase() }).catch(() => null);
+        setFormSuccess('Your email is not yet confirmed. We\'ve resent the confirmation link — check your inbox (and spam folder).');
+      } else {
+        const hint = isCredentialError ? ' If you registered with Google, use "Log In with Google Account" below.' : '';
+        setFormError(rawMsg + hint);
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -518,6 +526,12 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
               </p>
             </div>
 
+            {formSuccess && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-start gap-2 font-medium">
+                <span className="material-symbols-outlined text-sm flex-shrink-0 mt-0.5">check_circle</span>
+                <span>{formSuccess}</span>
+              </div>
+            )}
             {formError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2 font-medium">
                 <span className="material-symbols-outlined text-sm flex-shrink-0">error</span>
@@ -619,7 +633,13 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
               </div>
             </div>
 
-            {/* Error Message */}
+            {/* Success / Error Messages */}
+            {formSuccess && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-start gap-2 font-medium">
+                <span className="material-symbols-outlined text-sm flex-shrink-0 mt-0.5">check_circle</span>
+                <span>{formSuccess}</span>
+              </div>
+            )}
             {formError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2 font-medium">
                 <span className="material-symbols-outlined text-sm flex-shrink-0">error</span>
