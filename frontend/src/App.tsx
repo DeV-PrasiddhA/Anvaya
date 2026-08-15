@@ -1,41 +1,19 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import SignUp, { type UserProfile } from './components/SignUp'
 import Dashboard from './components/Dashboard'
 import BrandLogo from './components/BrandLogo'
 import { supabase } from './supabaseClient'
 import { fetchMarketPricesFromSupabase, fetchUserProfile, registerUserInSupabase, type MarketPrice } from './api'
+import { formatNepalDate } from './utils/time'
 
 function App() {
-  const [userProfile, setUserProfile] = useState<UserProfile | undefined>(() => {
-    try {
-      const saved = localStorage.getItem('anvaya_user_profile');
-      return saved ? JSON.parse(saved) : undefined;
-    } catch {
-      return undefined;
-    }
-  });
+  const [userProfile, setUserProfile] = useState<UserProfile | undefined>();
 
-  const [farmerName, setFarmerName] = useState(() => {
-    try {
-      const saved = localStorage.getItem('anvaya_user_profile');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.name) return parsed.name;
-      }
-    } catch {}
-    return 'Farmer';
-  });
+  const [farmerName, setFarmerName] = useState('Farmer');
 
   const [currentPage, setCurrentPage] = useState<'landing' | 'signup' | 'farmer-dashboard'>(() => {
     if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('error='))) {
       return 'signup';
-    }
-    const saved = localStorage.getItem('anvaya_user_profile');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.phone && parsed.district) return 'farmer-dashboard';
-      } catch {}
     }
     return 'landing';
   });
@@ -53,6 +31,8 @@ function App() {
   const [marketPrices, setMarketPrices] = useState<MarketPrice[]>([]);
   const [marketPricesLoading, setMarketPricesLoading] = useState(true);
   const [marketPriceSearch, setMarketPriceSearch] = useState('');
+  const [showNepaliMarketNames, setShowNepaliMarketNames] = useState(false);
+  const authSessionInFlight = useRef<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -73,33 +53,24 @@ function App() {
     }
   }, [marketPrices, roiCrop]);
 
-  const handleAuthUserSession = async (user: any) => {
+  const handleAuthUserSession = async (user: any, accessToken?: string) => {
+    if (authSessionInFlight.current === user.id) return;
+    authSessionInFlight.current = user.id;
     try {
       const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
       const email = user.email || '';
-
-      // Check if local saved profile is already complete
-      const cachedProfileStr = localStorage.getItem('anvaya_user_profile');
-      if (cachedProfileStr) {
-        try {
-          const cached = JSON.parse(cachedProfileStr);
-          if (cached.phone && cached.district && cached.email === email) {
-            setUserProfile(cached);
-            setFarmerName(cached.name || profileName);
-            setCurrentPage('farmer-dashboard');
-            return;
-          }
-        } catch {}
-      }
 
       // Check if there is a pending questionnaire profile from Google signup
       const savedPending = localStorage.getItem('pending_google_signup_profile');
       if (savedPending) {
         try {
           const pending = JSON.parse(savedPending);
-          localStorage.removeItem('pending_google_signup_profile');
+          const pendingEmail = String(pending.email || '').trim().toLowerCase();
+          if (pendingEmail && pendingEmail !== email.trim().toLowerCase()) {
+            localStorage.removeItem('pending_google_signup_profile');
+          } else {
 
-          const completeProfile: UserProfile = {
+            const completeProfile: UserProfile = {
             name: pending.name || profileName,
             role: pending.role || 'Farmer',
             phone: pending.phone || '',
@@ -108,12 +79,18 @@ function App() {
             district: pending.district,
             ward: pending.ward,
             localLocation: pending.localLocation,
+            latitude: pending.latitude,
+            longitude: pending.longitude,
+            locationAccuracyM: pending.locationAccuracyM,
+            locationSource: pending.locationSource,
+            showOnMap: pending.showOnMap,
             extraField1: pending.extraField1,
             extraField2: pending.extraField2,
-          };
+            };
 
-          // Register in database
-          await registerUserInSupabase({
+            // Register in database. The API verifies that this session belongs
+            // to the user id being completed.
+            await registerUserInSupabase({
             id: user.id,
             email: email,
             name: completeProfile.name,
@@ -123,29 +100,40 @@ function App() {
             district: completeProfile.district,
             ward: completeProfile.ward,
             localLocation: completeProfile.localLocation,
+            latitude: completeProfile.latitude,
+            longitude: completeProfile.longitude,
+            locationAccuracyM: completeProfile.locationAccuracyM,
+            locationSource: completeProfile.locationSource,
+            showOnMap: completeProfile.showOnMap,
             extraField1: completeProfile.extraField1,
             extraField2: completeProfile.extraField2,
             isNewSignup: true,
-          });
+            }, accessToken);
+            localStorage.removeItem('pending_google_signup_profile');
 
-          setFarmerName(completeProfile.name);
-          setUserProfile(completeProfile);
-          localStorage.setItem('anvaya_user_profile', JSON.stringify(completeProfile));
-          setCurrentPage('farmer-dashboard');
-          return;
+            setFarmerName(completeProfile.name);
+            setUserProfile(completeProfile);
+            localStorage.setItem('anvaya_user_profile', JSON.stringify(completeProfile));
+            setCurrentPage('farmer-dashboard');
+            return;
+          }
         } catch (e) {
           console.warn('Error saving pending profile:', e);
+          const message = e instanceof Error ? e.message : 'Could not complete your Google signup profile.';
+          setAuthErrorNotice(message);
+          setCurrentPage('signup');
+          return;
         }
       }
 
       // Check if user profile exists in database
-      const existingDbProfile = await fetchUserProfile(email || user.id);
+      const existingDbProfile = await fetchUserProfile(user.id, accessToken);
 
-      // If account was originally created using Email & Password, block Google OAuth login for this email
-      if (existingDbProfile && existingDbProfile.password && user.app_metadata?.provider === 'google') {
+      if (existingDbProfile?.role === 'Cooperative') {
         await supabase.auth.signOut();
         localStorage.removeItem('anvaya_user_profile');
-        setAuthErrorNotice(`This email (${email}) was registered using Email and Password. Please log in using your Email and Password.`);
+        setUserProfile(undefined);
+        setAuthErrorNotice('Cooperative accounts are coming soon and are not available yet.');
         setCurrentPage('signup');
         return;
       }
@@ -158,9 +146,14 @@ function App() {
           role: existingDbProfile.role || 'Farmer',
           province: existingDbProfile.province,
           district: existingDbProfile.district,
-          ward: existingDbProfile.ward,
-          localLocation: existingDbProfile.local_location,
-          extraField1: existingDbProfile.extra_field_1,
+            ward: existingDbProfile.ward,
+            localLocation: existingDbProfile.local_location,
+            latitude: existingDbProfile.latitude,
+            longitude: existingDbProfile.longitude,
+            locationAccuracyM: existingDbProfile.location_accuracy_m,
+            locationSource: existingDbProfile.location_source,
+            showOnMap: existingDbProfile.show_on_map,
+            extraField1: existingDbProfile.extra_field_1,
           extraField2: existingDbProfile.extra_field_2,
         };
         setFarmerName(profile.name);
@@ -181,6 +174,8 @@ function App() {
     } catch (e) {
       console.warn('Session check error:', e);
       setCurrentPage('signup');
+    } finally {
+      authSessionInFlight.current = null;
     }
   };
 
@@ -188,20 +183,29 @@ function App() {
   useEffect(() => {
     if (window.location.hash.includes('error=')) {
       const params = new URLSearchParams(window.location.hash.substring(1));
-      const errorDesc = params.get('error_description') || params.get('error') || 'OAuth authentication failed.';
-      setAuthErrorNotice(decodeURIComponent(errorDesc.replace(/\+/g, ' ')));
+      const rawErrorDesc = params.get('error_description') || params.get('error') || 'OAuth authentication failed.';
+      let errorDesc = rawErrorDesc;
+      try {
+        errorDesc = decodeURIComponent(rawErrorDesc.replace(/\+/g, ' '));
+      } catch {
+        // URLSearchParams already decoded the value; keep the readable value
+        // if the provider returned malformed percent-encoding.
+      }
+      setAuthErrorNotice(errorDesc);
       setCurrentPage('signup');
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        handleAuthUserSession(session.user);
+        void handleAuthUserSession(session.user, session.access_token);
       }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        handleAuthUserSession(session.user);
+        window.setTimeout(() => {
+          void handleAuthUserSession(session.user, session.access_token);
+        }, 0);
       }
     });
 
@@ -263,16 +267,16 @@ function App() {
   };
 
   const cropTickerItems = marketPrices.map((item) => ({
-    name: item.crop_name,
+    name: showNepaliMarketNames ? item.crop_name_ne || item.crop_name : item.crop_name,
     price: `NPR ${item.price_npr.toLocaleString()}/${item.unit}`,
-    change: item.change_percent === null
-      ? 'new'
-      : `${item.change_percent >= 0 ? '+' : ''}${item.change_percent.toFixed(1)}% vs prior day`,
+    changePercent: item.change_percent,
     up: item.is_up ?? true,
   }));
 
   // Duplicate items for seamless continuous loop
-  const getMarketDisplayName = (item: MarketPrice) => item.crop_name;
+  const getMarketDisplayName = (item: MarketPrice) => (
+    showNepaliMarketNames ? item.crop_name_ne || item.crop_name : item.crop_name
+  );
 
   const tickerList = [...cropTickerItems, ...cropTickerItems];
   const filteredMarketPrices = marketPrices.filter((item) => {
@@ -372,8 +376,42 @@ function App() {
             <div key={index} className="flex items-center gap-2 px-4 border-r border-outline-variant/30">
               <span className="font-semibold text-primary">{item.name}</span>
               <span className="text-on-surface-variant">{item.price}</span>
-              <span className="text-xs font-bold text-on-surface-variant">
-                {item.change}
+              <span
+                className="flex items-center gap-1.5 text-xs font-bold text-on-surface-variant"
+                title={item.changePercent === null ? 'No prior-day price available' : 'Daily price movement'}
+              >
+                {item.changePercent === null ? (
+                  <span>New</span>
+                ) : (
+                  <>
+                    <svg
+                      className={item.up ? 'text-emerald-600' : 'text-red-500'}
+                      width="38"
+                      height="18"
+                      viewBox="0 0 38 18"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <polyline
+                        points={item.up ? '1,15 7,13 12,14 19,9 25,10 31,5 36,3' : '1,3 7,5 12,4 19,9 25,8 31,13 36,15'}
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d={item.up ? 'M32 3h4v4' : 'M32 15h4v-4'}
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className={item.up ? 'text-emerald-700' : 'text-red-600'}>
+                      {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(1)}%
+                    </span>
+                  </>
+                )}
               </span>
             </div>
           ))}
@@ -457,8 +495,10 @@ function App() {
 
               {/* Cooperative Entrance */}
               <button
-                onClick={() => setCurrentPage('signup')}
-                className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-amber-500 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col items-center text-center justify-between group min-h-[170px] relative"
+                type="button"
+                disabled
+                aria-label="Cooperative coming soon"
+                className="p-5 rounded-2xl bg-white border border-amber-200 transition-all duration-300 cursor-not-allowed flex flex-col items-center text-center justify-between group min-h-[170px] relative opacity-80"
               >
                 <span className="absolute top-3.5 right-3.5 px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
                   Coming Soon
@@ -471,8 +511,8 @@ function App() {
                   <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">Aggregate member harvest pools & auctions</p>
                 </div>
                 <div className="mt-3.5 pt-2.5 border-t border-slate-100 w-full flex items-center justify-center gap-1 text-xs font-bold text-amber-700 group-hover:text-amber-800">
-                  <span>Preview Teaser</span>
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  <span>Coming Soon</span>
+                  <span className="material-symbols-outlined text-sm">schedule</span>
                 </div>
               </button>
 
@@ -539,17 +579,30 @@ function App() {
               <h2 className="text-2xl md:text-4xl font-bold text-primary mt-2 mb-3">Location-Wise Market Price Comparison</h2>
               <p className="text-sm text-on-surface-variant">Compare live wholesale produce floor prices across major Nepalese agricultural hubs.</p>
             </div>
-            <label className="relative w-full lg:w-80 shrink-0">
-              <span className="sr-only">Search market prices</span>
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-on-surface-variant">search</span>
-              <input
-                type="search"
-                value={marketPriceSearch}
-                onChange={(event) => setMarketPriceSearch(event.target.value)}
-                placeholder="Search commodity or market"
-                className="w-full rounded-xl border border-outline-variant/40 bg-white px-10 py-3 text-xs text-primary outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
-              />
-            </label>
+            <div className="flex w-full lg:w-auto shrink-0 flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={() => setShowNepaliMarketNames((visible) => !visible)}
+                aria-pressed={showNepaliMarketNames}
+                className={`rounded-xl border px-4 py-3 text-xs font-bold transition-colors ${showNepaliMarketNames
+                  ? 'border-secondary bg-secondary text-white'
+                  : 'border-outline-variant/40 bg-white text-primary hover:border-secondary hover:text-secondary'
+                  }`}
+              >
+                {showNepaliMarketNames ? 'Show English' : 'नेपाली नाम'}
+              </button>
+              <label className="relative w-full sm:w-80">
+                <span className="sr-only">Search market prices</span>
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-on-surface-variant">search</span>
+                <input
+                  type="search"
+                  value={marketPriceSearch}
+                  onChange={(event) => setMarketPriceSearch(event.target.value)}
+                  placeholder={showNepaliMarketNames ? 'वस्तु वा बजार खोज्नुहोस्' : 'Search commodity or market'}
+                  className="w-full rounded-xl border border-outline-variant/40 bg-white px-10 py-3 text-xs text-primary outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                />
+              </label>
+            </div>
           </div>
 
           <div className="bg-white/90 glass-panel rounded-3xl p-6 border border-white/60 shadow-md overflow-hidden">
@@ -594,7 +647,7 @@ function App() {
                       </td>
                       <td className="py-3.5 font-semibold">NPR {item.maximum_price_npr.toLocaleString()}</td>
                       <td className="py-3.5 text-xs text-on-surface-variant">{item.market}</td>
-                      <td className="py-3.5 text-right pr-4 font-bold text-secondary text-xs">{item.price_date}</td>
+                      <td className="py-3.5 text-right pr-4 font-bold text-secondary text-xs">{formatNepalDate(item.price_date)}</td>
                     </tr>
                   ))}
                 </tbody>

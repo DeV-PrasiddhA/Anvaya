@@ -10,7 +10,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT UNIQUE,
-    password TEXT,
     name TEXT NOT NULL,
     role TEXT DEFAULT 'Farmer' CHECK (role IN ('Farmer', 'Retailer', 'Cooperative', 'Transport Provider')),
     phone TEXT,
@@ -18,6 +17,12 @@ CREATE TABLE IF NOT EXISTS public.users (
     district TEXT,
     ward TEXT,
     local_location TEXT,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    location_accuracy_m DOUBLE PRECISION,
+    location_source TEXT CHECK (location_source IN ('gps', 'manual', 'district_centroid', 'admin')),
+    show_on_map BOOLEAN NOT NULL DEFAULT true,
+    location_updated_at TIMESTAMP WITH TIME ZONE,
     extra_field_1 TEXT, -- (e.g. Primary Crop, Store Name, Registered Coop, Vehicle Type)
     extra_field_2 TEXT, -- (e.g. Land Size, Sourcing Volume, Member Count, License Plate)
     avatar_url TEXT,
@@ -27,8 +32,60 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Ensure columns exist and phone is nullable (Google OAuth does not provide phone number)
 ALTER TABLE public.users ALTER COLUMN phone DROP NOT NULL;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS email TEXT;
-ALTER TABLE public.users ADD COLUMN IF NOT EXISTS password TEXT;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS location_accuracy_m DOUBLE PRECISION;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS location_source TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS show_on_map BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS location_updated_at TIMESTAMP WITH TIME ZONE;
+
+-- Credentials belong exclusively to Supabase Auth. Remove the legacy
+-- plaintext-password column if this migration is being applied to an older
+-- database.
+ALTER TABLE public.users DROP COLUMN IF EXISTS password;
+
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read their own profile" ON public.users;
+CREATE POLICY "Users can read their own profile"
+  ON public.users
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_phone_unique_idx
+  ON public.users (phone)
+  WHERE phone IS NOT NULL AND btrim(phone) <> '';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'users_location_nepal_bounds'
+  ) THEN
+    ALTER TABLE public.users
+      ADD CONSTRAINT users_location_nepal_bounds CHECK (
+        latitude IS NULL OR longitude IS NULL OR
+        (latitude BETWEEN 26.347 AND 30.447 AND longitude BETWEEN 80.058 AND 88.201)
+      );
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'users_location_source_valid'
+  ) THEN
+    ALTER TABLE public.users
+      ADD CONSTRAINT users_location_source_valid CHECK (
+        location_source IS NULL OR location_source IN ('gps', 'manual', 'district_centroid', 'admin')
+      );
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS users_map_location_idx
+  ON public.users (show_on_map, role, location_updated_at DESC)
+  WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
 
 -- 2. AUTOMATIC PROFILE CREATION TRIGGER FOR GOOGLE & EMAIL OAUTH SIGNUPS
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -47,11 +104,8 @@ BEGIN
       name = EXCLUDED.name,
       avatar_url = EXCLUDED.avatar_url;
   RETURN new;
-EXCEPTION WHEN OTHERS THEN
-  -- Prevents Supabase Auth from throwing "Database error saving new user"
-  RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Trigger execution on auth.users insert
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

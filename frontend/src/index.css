@@ -161,3 +161,67 @@
 .icon-container {
   transition: all 0.3s ease;
 }
+
+/* Leaflet account markers and popup content */
+.transport-map-marker {
+  background: transparent;
+  border: 0;
+}
+
+.transport-map-marker span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: #ffffff;
+  border: 3px solid #ffffff;
+  border-radius: 999px 999px 999px 4px;
+  box-shadow: 0 3px 10px rgba(15, 31, 24, 0.3);
+  transform: rotate(-45deg);
+}
+
+.transport-map-marker span::before {
+  transform: rotate(45deg);
+}
+
+.map-popup {
+  min-width: 170px;
+  font-family: Inter, sans-serif;
+  color: #131b2e;
+}
+
+.map-popup-role {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.map-popup-role .material-symbols-outlined {
+  font-size: 15px;
+}
+
+.map-popup h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.map-popup p:not(.map-popup-role) {
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.map-popup-live {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.map-popup-muted {
+  color: #64748b;
+}
