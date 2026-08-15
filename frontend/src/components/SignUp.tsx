@@ -57,6 +57,7 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
   const [latitude, setLatitude] = useState<number | undefined>(initialProfile?.latitude);
   const [longitude, setLongitude] = useState<number | undefined>(initialProfile?.longitude);
   const [locationAccuracyM, setLocationAccuracyM] = useState<number | undefined>(initialProfile?.locationAccuracyM);
+  const [locationSource, setLocationSource] = useState<'gps' | 'district_centroid'>(initialProfile?.locationSource === 'district_centroid' ? 'district_centroid' : 'gps');
   const [locationStatus, setLocationStatus] = useState('Your location is required to place this account on the Nepal map.');
   const [locationLoading, setLocationLoading] = useState(false);
   const [showOnMap, setShowOnMap] = useState(initialProfile?.showOnMap ?? true);
@@ -139,6 +140,30 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
     'Sudurpashchim Province': ['Kailali', 'Kanchanpur', 'Dadeldhura', 'Doti', 'Achham'],
   };
 
+  // Approximate district centroids for fallback when GPS is unavailable
+  const districtCentroids: Record<string, [number, number]> = {
+    Taplejung:[27.35,87.67],Sankhuwasabha:[27.55,87.28],Solukhumbu:[27.78,86.62],Dhankuta:[26.98,87.35],Ilam:[26.91,87.92],Jhapa:[26.64,87.85],Morang:[26.70,87.38],Sunsari:[26.67,87.17],
+    Saptari:[26.60,86.87],Siraha:[26.65,86.21],Dhanusha:[26.82,85.93],Mahottari:[26.85,85.67],Sarlahi:[26.96,85.37],Rautahat:[27.00,85.10],Bara:[27.05,84.97],Parsa:[27.10,84.78],
+    Kathmandu:[27.71,85.31],Lalitpur:[27.67,85.32],Bhaktapur:[27.67,85.43],Kavrepalanchok:[27.57,85.62],Chitwan:[27.53,84.35],Makwanpur:[27.43,84.97],Nuwakot:[27.98,85.17],Dhading:[27.87,84.87],
+    Kaski:[28.25,83.97],Syangja:[28.07,83.88],Baglung:[28.27,83.60],Myagdi:[28.47,83.47],Mustang:[29.18,83.96],Lamjung:[28.15,84.38],Gorkha:[28.00,84.63],Tanahun:[27.93,84.25],
+    Rupandehi:[27.55,83.44],Kapilvastu:[27.57,83.05],Palpa:[27.87,83.55],Banke:[28.07,81.61],Bardiya:[28.30,81.42],Dang:[28.07,82.30],
+    Surkhet:[28.60,81.62],Dailekh:[28.85,81.72],Jajarkot:[28.70,82.18],['Rukum West']:[28.63,82.63],Jumla:[29.27,82.18],
+    Kailali:[28.72,80.97],Kanchanpur:[29.07,80.42],Dadeldhura:[29.30,80.58],Doti:[29.27,81.17],Achham:[29.10,81.18],
+  };
+
+  const useDistrictLocation = () => {
+    const coords = districtCentroids[district];
+    if (!coords) {
+      setLocationStatus('No approximate coordinates available for this district. Please use GPS.');
+      return;
+    }
+    setLatitude(coords[0]);
+    setLongitude(coords[1]);
+    setLocationAccuracyM(5000);
+    setLocationSource('district_centroid');
+    setLocationStatus(`Using approximate ${district} district centre. GPS is more accurate — tap "Use my current location" if available.`);
+  };
+
   const provinces = Object.keys(nepalAdminData);
   const districtsForProvince = nepalAdminData[province] ?? [];
   const wardNumbers = Array.from({ length: 35 }, (_, i) => String(i + 1));
@@ -205,6 +230,7 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         setLatitude(nextLatitude);
         setLongitude(nextLongitude);
         setLocationAccuracyM(accuracy);
+        setLocationSource('gps');
         setLocationStatus(`GPS location captured (accuracy about ${Math.round(accuracy)}m).`);
         setLocationLoading(false);
       },
@@ -263,7 +289,7 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         latitude,
         longitude,
         locationAccuracyM,
-        locationSource: 'gps',
+        locationSource: locationSource,
         showOnMap,
         extraField1: extraField1.trim(),
         extraField2: extraField2.trim(),
@@ -440,7 +466,7 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         latitude,
         longitude,
         locationAccuracyM,
-        locationSource: 'gps',
+        locationSource: locationSource,
         showOnMap,
         extraField1: extraField1.trim(),
         extraField2: extraField2.trim(),
@@ -848,8 +874,17 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
                     disabled={locationLoading}
                     className="w-full rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white border-none cursor-pointer disabled:cursor-wait disabled:opacity-60"
                   >
-                    {locationLoading ? 'Reading GPS location…' : latitude !== undefined ? 'Refresh GPS location' : 'Use my current location'}
+                    {locationLoading ? 'Reading GPS location…' : latitude !== undefined && locationSource === 'gps' ? 'Refresh GPS location' : 'Use my current location'}
                   </button>
+                  {latitude === undefined && (
+                    <button
+                      type="button"
+                      onClick={useDistrictLocation}
+                      className="w-full rounded-xl border border-emerald-600 px-4 py-2 text-xs font-semibold text-emerald-800 bg-white hover:bg-emerald-50 border-solid cursor-pointer"
+                    >
+                      Use approximate {district} district location instead
+                    </button>
+                  )}
                   <p className={`text-[11px] font-medium ${latitude !== undefined ? 'text-emerald-800' : 'text-slate-600'}`}>{locationStatus}</p>
                   <label className="flex items-start gap-2 text-[11px] text-slate-700 cursor-pointer">
                     <input type="checkbox" checked={showOnMap} onChange={(e) => setShowOnMap(e.target.checked)} className="mt-0.5 accent-emerald-700" />
