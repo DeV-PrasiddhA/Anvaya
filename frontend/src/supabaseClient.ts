@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+const supabaseUrl = import.meta.env.SUPABASE_URL?.trim();
+const supabaseAnonKey = import.meta.env.SUPABASE_ANON_KEY?.trim();
 
-// Exported so App.tsx can render a configuration error instead of a blank screen
+// Exported so main.tsx can render a configuration error instead of a blank screen
 export const supabaseConfigError: string | null =
   !supabaseUrl || !supabaseAnonKey
-    ? 'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your deployment environment variables.'
+    ? 'Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY in your deployment environment variables.'
     : null;
 
 export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder');
