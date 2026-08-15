@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { fetchUserProfile, registerUserInSupabase } from '../api';
-import { signInWithEmail, signInWithGoogle, signOutUser } from '../supabaseClient';
+import { signInWithEmail, signInWithGoogle, signOutUser, supabase } from '../supabaseClient';
 import BrandLogo from './BrandLogo';
 
 export interface UserProfile {
@@ -37,7 +37,7 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
     if (initialMode) return initialMode;
     if (authErrorNotice?.includes('registered using Email and Password')) return 'login';
     if (authErrorNotice?.includes('No registered account found')) return 'wizard';
-    if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('error='))) {
+    if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('error=') || window.location.search.includes('error='))) {
       return 'login';
     }
     return 'wizard';
@@ -254,7 +254,7 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         name: name.trim(),
         role: selectedRole,
         phone: phone.trim(),
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         province,
         district,
         ward,
@@ -268,10 +268,18 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         extraField2: extraField2.trim(),
       };
 
-      // Supabase Auth creates the credential; the Express API stores the profile.
-      await registerUserInSupabase({
-        email: email.trim(),
-        password: password,
+      // Auth signup handled directly by Supabase client — password never sent to our backend
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: { data: { full_name: name.trim() } },
+      });
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('Failed to create account. Please try again.');
+
+      const profilePayload = {
+        id: authData.user.id,
+        email: email.trim().toLowerCase(),
         name: newProfile.name,
         role: newProfile.role,
         phone: newProfile.phone || '',
@@ -287,16 +295,31 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         extraField1: newProfile.extraField1,
         extraField2: newProfile.extraField2,
         isNewSignup: true,
-      });
+      };
 
-      // Sign in immediately so the browser receives the Supabase session.
-      await signInWithEmail(email.trim(), password);
-
-      if (onNavigateToDashboard) {
-        onNavigateToDashboard(newProfile);
+      if (authData.session) {
+        // Email auto-confirmed — create profile immediately
+        await registerUserInSupabase(profilePayload, authData.session.access_token);
+        if (onNavigateToDashboard) {
+          onNavigateToDashboard(newProfile);
+        }
+      } else {
+        // Email confirmation required — save profile to complete after the user confirms
+        localStorage.setItem('pending_email_signup_profile', JSON.stringify({
+          userId: authData.user.id,
+          ...newProfile,
+        }));
+        setFormError('Account created! Please check your email and click the confirmation link to activate your account.');
       }
     } catch (err: any) {
-      setFormError(err.message || 'Registration failed. Please check your details.');
+      const msg: string = err.message || '';
+      if (/already registered|already been registered/i.test(msg)) {
+        setFormError('An account with this email already exists. Please switch to Log In.');
+      } else {
+        setFormError(msg || 'Registration failed. Please check your details.');
+      }
+      // Sign out any partial session to avoid an orphaned auth state
+      await supabase.auth.signOut().catch(() => undefined);
     } finally {
       setAuthLoading(false);
     }
@@ -350,7 +373,10 @@ export default function SignUp({ initialProfile, authErrorNotice, initialMode, o
         onNavigateToDashboard(profile);
       }
     } catch (err: any) {
-      setFormError(err.message || 'Invalid login credentials. Please check your email and password.');
+      const rawMsg: string = err.message || 'Invalid login credentials. Please check your email and password.';
+      const isCredentialError = /invalid.*(login|credential|password)/i.test(rawMsg) || rawMsg.toLowerCase().includes('invalid login');
+      const hint = isCredentialError ? ' If you registered with Google, use "Log In with Google Account" below.' : '';
+      setFormError(rawMsg + hint);
     } finally {
       setAuthLoading(false);
     }

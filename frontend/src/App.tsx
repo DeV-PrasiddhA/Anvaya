@@ -12,8 +12,12 @@ function App() {
   const [farmerName, setFarmerName] = useState('Farmer');
 
   const [currentPage, setCurrentPage] = useState<'landing' | 'signup' | 'farmer-dashboard'>(() => {
-    if (typeof window !== 'undefined' && (window.location.hash.includes('access_token') || window.location.hash.includes('error='))) {
-      return 'signup';
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      const search = window.location.search;
+      if (hash.includes('access_token') || hash.includes('error=') || search.includes('error=')) {
+        return 'signup';
+      }
     }
     return 'landing';
   });
@@ -60,63 +64,74 @@ function App() {
       const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
       const email = user.email || '';
 
-      // Check if there is a pending questionnaire profile from Google signup
+      // Helper: build and save a completed profile from a pending questionnaire entry
+      const completePendingProfile = async (pending: any, pendingKey: string) => {
+        const completeProfile: UserProfile = {
+          name: pending.name || profileName,
+          role: pending.role || 'Farmer',
+          phone: pending.phone || '',
+          email: email, // always use the authenticated account's email
+          province: pending.province,
+          district: pending.district,
+          ward: pending.ward,
+          localLocation: pending.localLocation,
+          latitude: pending.latitude,
+          longitude: pending.longitude,
+          locationAccuracyM: pending.locationAccuracyM,
+          locationSource: pending.locationSource,
+          showOnMap: pending.showOnMap,
+          extraField1: pending.extraField1,
+          extraField2: pending.extraField2,
+        };
+        await registerUserInSupabase({
+          id: user.id,
+          email: email,
+          name: completeProfile.name,
+          role: completeProfile.role,
+          phone: completeProfile.phone || '',
+          province: completeProfile.province,
+          district: completeProfile.district,
+          ward: completeProfile.ward,
+          localLocation: completeProfile.localLocation,
+          latitude: completeProfile.latitude,
+          longitude: completeProfile.longitude,
+          locationAccuracyM: completeProfile.locationAccuracyM,
+          locationSource: completeProfile.locationSource,
+          showOnMap: completeProfile.showOnMap,
+          extraField1: completeProfile.extraField1,
+          extraField2: completeProfile.extraField2,
+          isNewSignup: true,
+        }, accessToken);
+        localStorage.removeItem(pendingKey);
+        setFarmerName(completeProfile.name);
+        setUserProfile(completeProfile);
+        localStorage.setItem('anvaya_user_profile', JSON.stringify(completeProfile));
+        setCurrentPage('farmer-dashboard');
+      };
+
+      // Check for a pending email signup profile (email confirmed on another tab/device)
+      const pendingEmailRaw = localStorage.getItem('pending_email_signup_profile');
+      if (pendingEmailRaw) {
+        try {
+          const pending = JSON.parse(pendingEmailRaw);
+          if (pending.userId === user.id || String(pending.email || '').trim().toLowerCase() === email.trim().toLowerCase()) {
+            await completePendingProfile(pending, 'pending_email_signup_profile');
+            return;
+          }
+        } catch (e) {
+          console.warn('Error completing pending email profile:', e);
+          localStorage.removeItem('pending_email_signup_profile');
+        }
+      }
+
+      // Check for a pending questionnaire profile from Google OAuth signup.
+      // The Google account email is always used regardless of what was typed in the form.
       const savedPending = localStorage.getItem('pending_google_signup_profile');
       if (savedPending) {
         try {
           const pending = JSON.parse(savedPending);
-          const pendingEmail = String(pending.email || '').trim().toLowerCase();
-          if (pendingEmail && pendingEmail !== email.trim().toLowerCase()) {
-            localStorage.removeItem('pending_google_signup_profile');
-          } else {
-
-            const completeProfile: UserProfile = {
-            name: pending.name || profileName,
-            role: pending.role || 'Farmer',
-            phone: pending.phone || '',
-            email: email,
-            province: pending.province,
-            district: pending.district,
-            ward: pending.ward,
-            localLocation: pending.localLocation,
-            latitude: pending.latitude,
-            longitude: pending.longitude,
-            locationAccuracyM: pending.locationAccuracyM,
-            locationSource: pending.locationSource,
-            showOnMap: pending.showOnMap,
-            extraField1: pending.extraField1,
-            extraField2: pending.extraField2,
-            };
-
-            // Register in database. The API verifies that this session belongs
-            // to the user id being completed.
-            await registerUserInSupabase({
-            id: user.id,
-            email: email,
-            name: completeProfile.name,
-            role: completeProfile.role,
-            phone: completeProfile.phone || '',
-            province: completeProfile.province,
-            district: completeProfile.district,
-            ward: completeProfile.ward,
-            localLocation: completeProfile.localLocation,
-            latitude: completeProfile.latitude,
-            longitude: completeProfile.longitude,
-            locationAccuracyM: completeProfile.locationAccuracyM,
-            locationSource: completeProfile.locationSource,
-            showOnMap: completeProfile.showOnMap,
-            extraField1: completeProfile.extraField1,
-            extraField2: completeProfile.extraField2,
-            isNewSignup: true,
-            }, accessToken);
-            localStorage.removeItem('pending_google_signup_profile');
-
-            setFarmerName(completeProfile.name);
-            setUserProfile(completeProfile);
-            localStorage.setItem('anvaya_user_profile', JSON.stringify(completeProfile));
-            setCurrentPage('farmer-dashboard');
-            return;
-          }
+          await completePendingProfile(pending, 'pending_google_signup_profile');
+          return;
         } catch (e) {
           console.warn('Error saving pending profile:', e);
           const message = e instanceof Error ? e.message : 'Could not complete your Google signup profile.';
@@ -181,16 +196,21 @@ function App() {
 
   // Listen for Supabase OAuth & Email session changes (e.g. Google Login redirect)
   useEffect(() => {
-    if (window.location.hash.includes('error=')) {
-      const params = new URLSearchParams(window.location.hash.substring(1));
+    const hashHasError = window.location.hash.includes('error=');
+    const searchHasError = window.location.search.includes('error=');
+    if (hashHasError || searchHasError) {
+      const params = hashHasError
+        ? new URLSearchParams(window.location.hash.substring(1))
+        : new URLSearchParams(window.location.search);
       const rawErrorDesc = params.get('error_description') || params.get('error') || 'OAuth authentication failed.';
       let errorDesc = rawErrorDesc;
       try {
         errorDesc = decodeURIComponent(rawErrorDesc.replace(/\+/g, ' '));
       } catch {
-        // URLSearchParams already decoded the value; keep the readable value
-        // if the provider returned malformed percent-encoding.
+        // keep value if percent-encoding is malformed
       }
+      // Clear the error params from the URL so a refresh doesn't re-trigger
+      window.history.replaceState(null, '', window.location.pathname);
       setAuthErrorNotice(errorDesc);
       setCurrentPage('signup');
     }
